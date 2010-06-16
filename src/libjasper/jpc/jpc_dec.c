@@ -1525,6 +1525,7 @@ static int jpc_dec_process_unk(jpc_dec_t *dec, jpc_ms_t *ms)
 {
 	/* Eliminate compiler warnings about unused variables. */
 	dec = 0;
+	(void)ms;
 
 #if 0 // JMW
 	fprintf(stderr, "warning: ignoring unknown marker segment\n");
