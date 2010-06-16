@@ -548,7 +548,7 @@ int jas_cmxform_apply(jas_cmxform_t *xform, jas_cmpixmap_t *in, jas_cmpixmap_t *
 			bufptr = &outbuf[i];
 			dataptr = &fmt->buf[n];
 			for (j = 0; j < m; ++j) {
-				v = (*bufptr) * scale + bias;
+				v = (long)((*bufptr) * scale + bias);
 				bufptr += xform->numoutchans;
 				if (jas_cmputint(&dataptr, fmt->sgnd, fmt->prec, v))
 					goto error;
@@ -908,10 +908,10 @@ static jas_cmreal_t jas_cmshapmatlut_lookup(jas_cmshapmatlut_t *lut, jas_cmreal_
 	int lo;
 	int hi;
 	t = x * (lut->size - 1);
-	lo = floor(t);
+	lo = (int) floor(t);
 	if (lo < 0)
 		return lut->data[0];
-	hi = ceil(t);
+	hi = (int) ceil(t);
 	if (hi >= lut->size)
 		return lut->data[lut->size - 1];
 	return lut->data[lo] + (t - lo) * (lut->data[hi] - lut->data[lo]);

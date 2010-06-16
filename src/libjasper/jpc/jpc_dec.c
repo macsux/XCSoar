@@ -1211,7 +1211,7 @@ static int jpc_dec_process_siz(jpc_dec_t *dec, jpc_ms_t *ms)
 	dec->tilexoff = siz->tilexoff;
 	dec->tileyoff = siz->tileyoff;
 	dec->numcomps = siz->numcomps;
-	if (!(dec->cp = jpc_dec_cp_create(dec->numcomps))) {
+	if (!(dec->cp = jpc_dec_cp_create((uint_fast16_t)dec->numcomps))) {
 		return -1;
 	}
 
@@ -1555,7 +1555,7 @@ static jpc_dec_cp_t *jpc_dec_cp_copy(jpc_dec_cp_t *cp)
 	jpc_dec_ccp_t *ccp;
 	int compno;
 
-	if (!(newcp = jpc_dec_cp_create(cp->numcomps))) {
+	if (!(newcp = jpc_dec_cp_create((uint_fast16_t)cp->numcomps))) {
 		return 0;
 	}
 	newcp->flags = cp->flags;

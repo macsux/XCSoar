@@ -689,7 +689,7 @@ static int jpc_coc_putparms(jpc_ms_t *ms, jpc_cstate_t *cstate, jas_stream_t *ou
 	jpc_coc_t *coc = &ms->parms.coc;
 	assert(coc->compparms.numdlvls <= 32);
 	if (cstate->numcomps <= 256) {
-		if (jpc_putuint8(out, coc->compno)) {
+		if (jpc_putuint8(out, (unsigned char)coc->compno)) {
 			return -1;
 		}
 	} else {
@@ -823,7 +823,7 @@ static int jpc_rgn_putparms(jpc_ms_t *ms, jpc_cstate_t *cstate, jas_stream_t *ou
 {
 	jpc_rgn_t *rgn = &ms->parms.rgn;
 	if (cstate->numcomps <= 256) {
-		if (jpc_putuint8(out, rgn->compno)) {
+		if (jpc_putuint8(out, (unsigned char)rgn->compno)) {
 			return -1;
 		}
 	} else {
@@ -920,7 +920,7 @@ static int jpc_qcc_putparms(jpc_ms_t *ms, jpc_cstate_t *cstate, jas_stream_t *ou
 {
 	jpc_qcc_t *qcc = &ms->parms.qcc;
 	if (cstate->numcomps <= 256) {
-		jpc_putuint8(out, qcc->compno);
+		jpc_putuint8(out, (unsigned char)qcc->compno);
 	} else {
 		jpc_putuint16(out, qcc->compno);
 	}
@@ -1281,12 +1281,12 @@ static int jpc_poc_putparms(jpc_ms_t *ms, jpc_cstate_t *cstate, jas_stream_t *ou
 		if (jpc_putuint8(out, pchg->rlvlnostart) ||
 		  ((cstate->numcomps > 256) ?
 		  jpc_putuint16(out, pchg->compnostart) :
-		  jpc_putuint8(out, pchg->compnostart)) ||
+		  jpc_putuint8(out, (unsigned char)pchg->compnostart)) ||
 		  jpc_putuint16(out, pchg->lyrnoend) ||
 		  jpc_putuint8(out, pchg->rlvlnoend) ||
 		  ((cstate->numcomps > 256) ?
 		  jpc_putuint16(out, pchg->compnoend) :
-		  jpc_putuint8(out, pchg->compnoend)) ||
+		  jpc_putuint8(out, (unsigned char)pchg->compnoend)) ||
 		  jpc_putuint8(out, pchg->prgord)) {
 			return -1;
 		}
