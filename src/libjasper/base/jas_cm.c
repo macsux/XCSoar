@@ -1053,6 +1053,7 @@ static int icctoclrspc(int iccclrspc, int refflag)
 			break;
 		}
 	}
+        return 0; // JMW should never get here
 }
 
 static int mono(jas_iccprof_t *iccprof, int op, jas_cmpxformseq_t **retpxformseq)
@@ -1241,6 +1242,8 @@ int jas_clrspc_numchans(int clrspc)
 		abort();
 		break;
 	}
+	// JMW should never get here!
+	return 0;
 }
 
 jas_iccprof_t *jas_iccprof_createfromcmprof(jas_cmprof_t *prof)

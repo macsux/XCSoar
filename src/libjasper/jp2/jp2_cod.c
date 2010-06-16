@@ -679,6 +679,8 @@ static int jp2_getuint64(jas_stream_t *in, uint_fast64_t *val)
 	in = 0;
 	val = 0;
 	abort();
+	// JMW don't know what this is...
+	return 0;
 }
 
 /******************************************************************************\
