@@ -211,7 +211,9 @@ static int jpc_dec_decodepkt(jpc_dec_t *dec, jas_stream_t *pkthdrstream, jas_str
 			}
 			if (jpc_ms_gettype(ms) != JPC_MS_SOP) {
 				jpc_ms_destroy(ms);
+#if 0 // JMW
 				fprintf(stderr, "missing SOP marker segment\n");
+#endif
 				return -1;
 			}
 			jpc_ms_destroy(ms);
@@ -332,7 +334,9 @@ hdroffstart = jas_stream_getrwcount(pkthdrstream);
 
 	} else {
 		if (jpc_bitstream_inalign(inb, 0x7f, 0)) {
+#if 0 // JMW
 			fprintf(stderr, "alignment failed\n");
+#endif
 			return -1;
 		}
 	}
@@ -348,12 +352,16 @@ hdroffstart = jas_stream_getrwcount(pkthdrstream);
 	if (cp->csty & JPC_COD_EPH) {
 		if (jpc_dec_lookahead(pkthdrstream) == JPC_MS_EPH) {
 			if (!(ms = jpc_getms(pkthdrstream, dec->cstate))) {
+#if 0 // JMW
 				fprintf(stderr, "cannot get (EPH) marker segment\n");
+#endif
 				return -1;
 			}
 			if (jpc_ms_gettype(ms) != JPC_MS_EPH) {
 				jpc_ms_destroy(ms);
+#if 0 // JMW
 				fprintf(stderr, "missing EPH marker segment\n");
+#endif
 				return -1;
 			}
 			jpc_ms_destroy(ms);
@@ -442,7 +450,9 @@ if (!tile->pkthdrstream || jas_stream_peekc(tile->pkthdrstream) == EOF) {
 			return ret;
 		}
 if (dec->maxpkts >= 0 && dec->numpkts >= dec->maxpkts) {
+#if 0 // JMW
 	fprintf(stderr, "warning: stopping decode prematurely as requested\n");
+#endif
 	return 0;
 }
 		if (jas_getdbglevel() >= 1) {

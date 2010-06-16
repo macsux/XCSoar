@@ -108,11 +108,11 @@ int jas_getdbglevel()
 /* Perform formatted output to standard error. */
 int jas_eprintf(const char *fmt, ...)
 {
-	int ret;
+	int ret=0;
 	va_list ap;
 
 	va_start(ap, fmt);
-	ret = vfprintf(stderr, fmt, ap);
+        // JMW disabled!	ret = vfprintf(stderr, fmt, ap);
 	va_end(ap);
 	return ret;
 }

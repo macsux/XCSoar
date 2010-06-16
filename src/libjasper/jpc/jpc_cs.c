@@ -288,11 +288,13 @@ jpc_ms_t *jpc_getms(jas_stream_t *in, jpc_cstate_t *cstate)
 			jpc_ms_dump(ms, stderr);
 		}
 
+#if 0 // JMW
 		if (JAS_CAST(ulong, jas_stream_tell(tmpstream)) != ms->len) {
 			fprintf(stderr,
 			  "warning: trailing garbage in marker segment (%ld bytes)\n",
 			  ms->len - jas_stream_tell(tmpstream));
 		}
+#endif
 
 		/* Close the temporary stream. */
 		jas_stream_close(tmpstream);

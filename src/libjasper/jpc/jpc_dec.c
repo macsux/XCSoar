@@ -331,8 +331,10 @@ static int jpc_dec_parseopts(const char *optstr, jpc_dec_importopts_t *opts)
 			opts->maxpkts = atoi(jas_tvparser_getval(tvp));
 			break;
 		default:
+#if 0 // JMW
 			fprintf(stderr, "warning: ignoring invalid option %s\n",
 			  jas_tvparser_gettag(tvp));
+#endif
 			break;
 		}
 	}
@@ -384,7 +386,9 @@ static int jpc_dec_decode(jpc_dec_t *dec)
         return 0;
       }
 
+#if 0 // JMW
 			fprintf(stderr, "cannot get marker segment\n");
+#endif
 			return -1;
 		}
 
@@ -394,7 +398,9 @@ static int jpc_dec_decode(jpc_dec_t *dec)
 		/* Ensure that this type of marker segment is permitted
 		  at this point in the code stream. */
 		if (!(dec->state & mstabent->validstates)) {
+#if 0 // JMW
 			fprintf(stderr, "unexpected marker segment type\n");
+#endif
 			jpc_ms_destroy(ms);
 			return -1;
 		}
@@ -502,7 +508,9 @@ static int jpc_dec_process_sot(jpc_dec_t *dec, jpc_ms_t *ms)
 	}
 
 	if (JAS_CAST(int, sot->tileno) > dec->numtiles) {
+#if 0 // JMW
 		fprintf(stderr, "invalid tile number in SOT marker segment\n");
+#endif
 		return -1;
 	}
 	/* Set the current tile. */
@@ -620,7 +628,9 @@ static int jpc_dec_process_sod(jpc_dec_t *dec, jpc_ms_t *ms)
 
 	if (jpc_dec_decodepkts(dec, (tile->pkthdrstream) ? tile->pkthdrstream :
 	  dec->in, dec->in)) {
+#if 0 // JMW
 		fprintf(stderr, "jpc_dec_decodepkts failed\n");
+#endif
 		return -1;
 	}
 
@@ -631,20 +641,26 @@ static int jpc_dec_process_sod(jpc_dec_t *dec, jpc_ms_t *ms)
 		curoff = jas_stream_getrwcount(dec->in);
 		if (curoff < dec->curtileendoff) {
 			n = dec->curtileendoff - curoff;
+#if 0 // JMW
 			fprintf(stderr,
 			  "warning: ignoring trailing garbage (%lu bytes)\n",
 			  (unsigned long) n);
+#endif
 
 			while (n-- > 0) {
 				if (jas_stream_getc(dec->in) == EOF) {
+#if 0 // JMW
 					fprintf(stderr, "read error\n");
+#endif
 					return -1;
 				}
 			}
 		} else if (curoff > dec->curtileendoff) {
+#if 0 // JMW
 			fprintf(stderr,
 			  "warning: not enough tile data (%lu bytes)\n",
 			  (unsigned long) curoff - dec->curtileendoff);
+#endif
 		}
 
 	}
@@ -1062,7 +1078,9 @@ static int jpc_dec_tiledecode(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 	jpc_dec_cmpt_t *cmpt;
 
 	if (jpc_dec_decodecblks(dec, tile)) {
+#if 0 // JMW
 		fprintf(stderr, "jpc_dec_decodecblks failed\n");
+#endif
 		return -1;
 	}
 
@@ -1315,8 +1333,10 @@ static int jpc_dec_process_coc(jpc_dec_t *dec, jpc_ms_t *ms)
 	jpc_dec_tile_t *tile;
 
 	if (JAS_CAST(int, coc->compno) > dec->numcomps) {
+#if 0 // JMW
 		fprintf(stderr,
 		  "invalid component number in COC marker segment\n");
+#endif
 		return -1;
 	}
 	switch (dec->state) {
@@ -1342,8 +1362,10 @@ static int jpc_dec_process_rgn(jpc_dec_t *dec, jpc_ms_t *ms)
 	jpc_dec_tile_t *tile;
 
 	if (JAS_CAST(int, rgn->compno) > dec->numcomps) {
+#if 0 // JMW
 		fprintf(stderr,
 		  "invalid component number in RGN marker segment\n");
+#endif
 		return -1;
 	}
 	switch (dec->state) {
@@ -1392,8 +1414,10 @@ static int jpc_dec_process_qcc(jpc_dec_t *dec, jpc_ms_t *ms)
 	jpc_dec_tile_t *tile;
 
 	if (JAS_CAST(int, qcc->compno) > dec->numcomps) {
+#if 0 // JMW
 		fprintf(stderr,
 		  "invalid component number in QCC marker segment\n");
+#endif
 		return -1;
 	}
 	switch (dec->state) {
@@ -1502,8 +1526,10 @@ static int jpc_dec_process_unk(jpc_dec_t *dec, jpc_ms_t *ms)
 	/* Eliminate compiler warnings about unused variables. */
 	dec = 0;
 
+#if 0 // JMW
 	fprintf(stderr, "warning: ignoring unknown marker segment\n");
 	jpc_ms_dump(ms, stderr);
+#endif
 	return 0;
 }
 
@@ -1865,8 +1891,10 @@ static void jpc_undo_roi(jas_matrix_t *x, int roishift, int bgshift, int numbps)
 				  Here we ensure that any such bits are masked off. */
 				if (mag & (~mask)) {
 					if (!warn) {
+#if 0 // JMW
 						fprintf(stderr,
 						  "warning: possibly corrupt code stream\n");
+#endif
 						warn = true;
 					}
 					mag &= mask;
