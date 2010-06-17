@@ -891,7 +891,7 @@ static int jp2_uuid_getdata(jp2_box_t *box, jas_stream_t *in)
 	
 	uuid->data_len = box->data_len - 16;
 	uuid->data = jas_malloc(uuid->data_len * sizeof(uint_fast8_t));
-	for (i = 0; i < uuid->data_len; i++)
+	for (i = 0; i < (int)uuid->data_len; i++)
 	{
 	    if (jp2_getuint8(in, &uuid->data[i]))
 		return -1;
@@ -910,7 +910,7 @@ static int jp2_uuid_putdata(jp2_box_t *box, jas_stream_t *out)
 		return -1;
 	}
 	
-	for (i = 0; i < uuid->data_len; i++)
+	for (i = 0; i < (int)uuid->data_len; i++)
 	{
 	    if (jp2_putuint8(out, uuid->data[i]))
 		return -1;
