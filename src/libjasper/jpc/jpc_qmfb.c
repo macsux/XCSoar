@@ -102,6 +102,7 @@
 *
 \******************************************************************************/
 
+#if 0
 #if ( defined(_MSC_VER) || defined(WIN32) || defined(__INTEL_COMPILER) || defined(__ICC) )
   #pragma message("QMFB: BATCH_SIZE = 256")
   #define JPC_BATCH_SIZE 128
@@ -110,6 +111,8 @@
   #pragma message("QMFB: BATCH_SIZE = 128")
   #define JPC_BATCH_SIZE 128
 #endif
+#endif
+#define JPC_BATCH_SIZE 128
 
 static jpc_qmfb1d_t *jpc_qmfb1d_create(void);
 
@@ -618,9 +621,11 @@ if (bufsize > QMFB_JOINBUFSIZE_BATCH) {
 		}
 		n = llen - (llen >> 1);
 		while (n-- > 0) {
-			*(jpc_batch_t*)ptr = *(jpc_batch_t*)lptr;
-			ptr -= twostep;
-			lptr -= step;
+		  if (ptr != lptr) {
+		    *(jpc_batch_t*)ptr = *(jpc_batch_t*)lptr;
+		  }
+		  ptr -= twostep;
+		  lptr -= step;
 		}
 		/* Copy the appropriate samples into the second phase of
 		  the output signal (corresponding to odd indexed
@@ -634,7 +639,9 @@ if (bufsize > QMFB_JOINBUFSIZE_BATCH) {
 				--tmpptr;
 				*(jpc_batch_t*)ptr = *tmpptr;
 			} else {
-				*(jpc_batch_t*)ptr = *(jpc_batch_t*)hptr;
+			  if (ptr != hptr) {
+			    *(jpc_batch_t*)ptr = *(jpc_batch_t*)hptr;
+			  }
 			}
 			hptr += step;
 			ptr += twostep;
