@@ -483,6 +483,10 @@ fprintf(stderr, "no of components is %d\n", jas_image_numcmpts(dec->image));
 	return image;
 
 error:
+	// JMW memory leak fixed
+	if (aux_buf.buf) {
+		jas_free(aux_buf.buf);
+	}
 	if (box) {
 		jp2_box_destroy(box);
 	}

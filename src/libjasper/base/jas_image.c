@@ -387,6 +387,7 @@ jas_image_t *jas_image_decode(jas_stream_t *in, int fmt, const char *optstr)
 	/* Create a color profile if needed. */
 	if (!jas_clrspc_isunknown(image->clrspc_) &&
 	  !jas_clrspc_isgeneric(image->clrspc_) && !image->cmprof_) {
+		// JMW memory leak here!
 		if (!(image->cmprof_ =
 		  jas_cmprof_createfromclrspc(jas_image_clrspc(image))))
 			goto error;

@@ -1410,6 +1410,8 @@ static int jpc_dec_process_siz(jpc_dec_t *dec, jpc_ms_t *ms)
 		tile->pkthdrstreampos = 0;
 		tile->pptstab = 0;
 		tile->cp = 0;
+
+		// JMW, memory leak?
 		if (!(tile->tcomps = jas_malloc(dec->numcomps *
 		  sizeof(jpc_dec_tcomp_t)))) {
 			return -1;
