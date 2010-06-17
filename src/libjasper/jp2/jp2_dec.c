@@ -122,6 +122,8 @@ jas_image_t *jp2_decode(jas_stream_t *in, const char *optstr)
 
   jas_aux_buffer_t aux_buf;
   aux_buf.id = 0;
+	aux_buf.size = 0;
+	aux_buf.buf = NULL;
 
   dec = 0;
 	box = 0;
@@ -242,12 +244,14 @@ jas_image_t *jp2_decode(jas_stream_t *in, const char *optstr)
         h = dec->ihdr->data.ihdr.height;
       }
       //fprintf(stdout, "\nW=%d H=%d\n", w, h);
-      printGTIFFromMemBufA( aux_buf.buf, aux_buf.size, w, h );
+      //printGTIFFromMemBufA( aux_buf.buf, aux_buf.size, w, h );
       //return NULL; 
       exit(0);
     }
     else
+#if 0 // JMW
       fprintf(stdout, "GeoJp2 info found...\n");
+#endif
   }
   // end: dima
   //-------------------------------------------------------
