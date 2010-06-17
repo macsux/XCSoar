@@ -87,6 +87,9 @@
 #include "jpc_t1dec.h"
 #include "jpc_math.h"
 
+// JMW
+#include "jasper/jpc_rtc.h"
+
 /******************************************************************************\
 *
 \******************************************************************************/
@@ -256,6 +259,12 @@ jas_image_t *jpc_decode(jas_stream_t *in, const char *optstr)
 		goto error;
 	}
 
+	if (dec->xcsoar) {
+		jas_rtc_SetInitialised(true);
+		jpc_dec_destroy(dec);
+		return 0;
+	}
+
   // dima: define the default for color space
 	jas_image_setclrspc(dec->image, JAS_CLRSPC_SGRAY);
   for (i=0; i<jas_image_numcmpts(dec->image); ++i)
@@ -296,13 +305,15 @@ error:
 typedef enum {
 	OPT_MAXLYRS,
 	OPT_MAXPKTS,
-	OPT_DEBUG
+	OPT_DEBUG,
+	OPT_XCSOAR
 } optid_t;
 
 jas_taginfo_t decopts[] = {
 	{OPT_MAXLYRS, "maxlyrs"},
 	{OPT_MAXPKTS, "maxpkts"},
 	{OPT_DEBUG, "debug"},
+	{OPT_XCSOAR, "xcsoar"},
 	{-1, 0}
 };
 
@@ -311,6 +322,7 @@ static int jpc_dec_parseopts(const char *optstr, jpc_dec_importopts_t *opts)
 	jas_tvparser_t *tvp;
 
 	opts->debug = 0;
+	opts->xcsoar = 0;
 	opts->maxlyrs = JPC_MAXLYRS;
 	opts->maxpkts = -1;
 
@@ -326,6 +338,13 @@ static int jpc_dec_parseopts(const char *optstr, jpc_dec_importopts_t *opts)
 			break;
 		case OPT_DEBUG:
 			opts->debug = atoi(jas_tvparser_getval(tvp));
+			break;
+		case OPT_XCSOAR:
+			if (jas_rtc_GetScanType()==1) {
+				opts->xcsoar = 2;
+			} else {
+				opts->xcsoar = 1;
+			}
 			break;
 		case OPT_MAXPKTS:
 			opts->maxpkts = atoi(jas_tvparser_getval(tvp));
@@ -365,6 +384,10 @@ static int jpc_dec_decode(jpc_dec_t *dec)
 	jpc_dec_mstabent_t *mstabent;
 	int ret;
 	jpc_cstate_t *cstate;
+
+	if (dec->xcsoar) {
+		jas_rtc_SetInitialised(false);
+	}
 
 	if (!(cstate = jpc_cstate_create())) {
 		return -1;
@@ -482,7 +505,15 @@ static int jpc_dec_process_sot(jpc_dec_t *dec, jpc_ms_t *ms)
 			compinfo->vstep = cmpt->vstep;
 		}
 
-		if (!(dec->image = jas_image_create(dec->numcomps, compinfos,
+		// JMW image created here
+
+		if (dec->cmpts) {
+			jas_rtc_SetSize(dec->cmpts->width, dec->cmpts->height);
+		}
+
+		// JMW don't create this image in xcsoar mode
+		if (dec->xcsoar == 0 &&
+		  !(dec->image = jas_image_create(dec->numcomps, compinfos,
 		  JAS_CLRSPC_UNKNOWN))) {
 			return -1;
 		}
@@ -516,6 +547,23 @@ static int jpc_dec_process_sot(jpc_dec_t *dec, jpc_ms_t *ms)
 	/* Set the current tile. */
 	dec->curtile = &dec->tiles[sot->tileno];
 	tile = dec->curtile;
+
+	// JMW set tile parms here and get index into the raster array
+	if (dec->xcsoar) {
+		tile->cache_index = sot->tileno;
+		jas_rtc_SetTile(sot->tileno, tile->xstart,
+				tile->ystart, tile->xend,
+				tile->yend);
+
+		if (dec->xcsoar==2) {
+			tile->hidden = 0;
+		} else {
+			tile->hidden = !(jas_rtc_TileRequest(sot->tileno));
+		}
+	} else {
+		tile->hidden = 0;
+	}
+
 	/* Ensure that this is the expected part number. */
 	if (sot->partno != tile->partno) {
 		return -1;
@@ -540,7 +588,9 @@ static int jpc_dec_process_sot(jpc_dec_t *dec, jpc_ms_t *ms)
 	switch (tile->state) {
 	case JPC_TILE_INIT:
 		/* This is the first tile-part for this tile. */
-		tile->state = JPC_TILE_ACTIVE;
+		if (!tile->hidden) {
+			tile->state = JPC_TILE_ACTIVE;
+		}
 		assert(!tile->cp);
 		if (!(tile->cp = jpc_dec_cp_copy(dec->cp))) {
 			return -1;
@@ -626,7 +676,9 @@ static int jpc_dec_process_sod(jpc_dec_t *dec, jpc_ms_t *ms)
 		jpc_dec_dump(dec, stderr);
 	}
 
-	if (jpc_dec_decodepkts(dec, (tile->pkthdrstream) ? tile->pkthdrstream :
+	// JMW hack
+	if (!tile->hidden &&
+	  jpc_dec_decodepkts(dec, (tile->pkthdrstream) ? tile->pkthdrstream :
 	  dec->in, dec->in)) {
 #if 0 // JMW
 		fprintf(stderr, "jpc_dec_decodepkts failed\n");
@@ -641,11 +693,13 @@ static int jpc_dec_process_sod(jpc_dec_t *dec, jpc_ms_t *ms)
 		curoff = jas_stream_getrwcount(dec->in);
 		if (curoff < dec->curtileendoff) {
 			n = dec->curtileendoff - curoff;
+			if (!tile->hidden) {
 #if 0 // JMW
 			fprintf(stderr,
 			  "warning: ignoring trailing garbage (%lu bytes)\n",
 			  (unsigned long) n);
 #endif
+			}
 
 			while (n-- > 0) {
 				if (jas_stream_getc(dec->in) == EOF) {
@@ -665,7 +719,7 @@ static int jpc_dec_process_sod(jpc_dec_t *dec, jpc_ms_t *ms)
 
 	}
 
-	if (tile->numparts > 0 && tile->partno == tile->numparts - 1) {
+	if (!tile->hidden && tile->numparts > 0 && tile->partno == tile->numparts - 1) {
 		if (jpc_dec_tiledecode(dec, tile)) {
 			return -1;
 		}
@@ -732,6 +786,16 @@ static int jpc_dec_tileinit(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 	tile->realmode = 0;
 	if (cp->mctid == JPC_MCT_ICT) {
 		tile->realmode = 1;
+	}
+
+	// JMW hack
+	if (tile->hidden) {
+		if (tile->tcomps) {
+			jas_free(tile->tcomps);
+			tile->tcomps=0;
+		}
+		tile->pi = 0;
+		return 0;
 	}
 
 	for (compno = 0, tcomp = tile->tcomps, cmpt = dec->cmpts; compno <
@@ -1077,6 +1141,11 @@ static int jpc_dec_tiledecode(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 	jpc_dec_ccp_t *ccp;
 	jpc_dec_cmpt_t *cmpt;
 
+	short* dptr;
+	int ilevel = 0;
+
+	if (tile->hidden) return 0;
+
 	if (jpc_dec_decodecblks(dec, tile)) {
 #if 0 // JMW
 		fprintf(stderr, "jpc_dec_decodecblks failed\n");
@@ -1088,8 +1157,16 @@ static int jpc_dec_tiledecode(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 	for (compno = 0, tcomp = tile->tcomps; compno < dec->numcomps;
 	  ++compno, ++tcomp) {
 		ccp = &tile->cp->ccps[compno];
-		for (rlvlno = 0, rlvl = tcomp->rlvls; rlvlno < tcomp->numrlvls;
-		  ++rlvlno, ++rlvl) {
+
+		ilevel = tcomp->numrlvls;
+		// JMW
+		if (dec->xcsoar==2) {
+			// JMW don't do this because it can result in significant errors
+			//ilevel = min(ilevel,1);
+		}
+
+		for (rlvlno = 0, rlvl = tcomp->rlvls; rlvlno < ilevel; ++rlvlno, ++rlvl) {
+			//printf(" level %d\n", rlvlno);
 			if (!rlvl->bands) {
 				continue;
 			}
@@ -1173,12 +1250,65 @@ static int jpc_dec_tiledecode(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 	/* Write the data for each component of the image. */
 	for (compno = 0, tcomp = tile->tcomps, cmpt = dec->cmpts; compno <
 	  dec->numcomps; ++compno, ++tcomp, ++cmpt) {
-		if (jas_image_writecmpt(dec->image, compno, tcomp->xstart -
-		  JPC_CEILDIV(dec->xstart, cmpt->hstep), tcomp->ystart -
-		  JPC_CEILDIV(dec->ystart, cmpt->vstep), jas_matrix_numcols(
-		  tcomp->data), jas_matrix_numrows(tcomp->data), tcomp->data)) {
-			fprintf(stderr, "write component failed\n");
-			return -4;
+		int x, y, xx, yy, iw, ih;
+		x = tcomp->xstart - JPC_CEILDIV(dec->xstart, cmpt->hstep);
+		y = tcomp->ystart - JPC_CEILDIV(dec->ystart, cmpt->vstep);
+
+		switch (dec->xcsoar) {
+		case 2:
+			dptr = jas_rtc_GetOverview();
+			iw = dec->cmpts->width/16;
+			ih = dec->cmpts->height/16;
+			if (dptr) {
+				jas_rtc_set_num_tiles(dec->numtiles);
+				jas_rtc_stepprogress();
+				for (i = 0; i < jas_matrix_numrows(tcomp->data); i+= 16) {
+					for (j = 0; j < jas_matrix_numcols(tcomp->data); j+= 16) {
+						short d = jas_matrix_get(tcomp->data, i, j);
+						if ((d<0) || (d>16384)) {
+							// JMW this is to avoid overflow errors
+							d = 0;
+						}
+						xx = (j+tcomp->xstart)/16;
+						yy = (i+tcomp->ystart)/16;
+						if ((xx<iw)&&(yy<ih)) {
+							dptr[xx+iw*yy]= d;
+						}
+					}
+				}
+			}
+			break;
+		case 1:
+			// JMW put data into image buffer
+			dptr = jas_rtc_GetImageBuffer(tile->cache_index);
+			if (dptr) {
+				jas_rtc_set_num_tiles(dec->numtiles);
+				jas_rtc_stepprogress();
+				for (i = 0; i < jas_matrix_numrows(tcomp->data); ++i) {
+					for (j = 0; j < jas_matrix_numcols(tcomp->data); ++j) {
+						short d = jas_matrix_get(tcomp->data, i, j);
+						if ((d<0) || (d>16384)) {
+							// JMW this is to avoid overflow errors
+							d = 0;
+						}
+						*dptr++ = d;
+					}
+					dptr++; // skip past right border
+				}
+			}
+			break;
+		default:
+		case 0:
+			if (jas_image_writecmpt(dec->image, compno,
+			  x, y,
+			  jas_matrix_numcols(tcomp->data),
+			  jas_matrix_numrows(tcomp->data),
+			  tcomp->data)) {
+#if 0 // JMW
+				fprintf(stderr, "write component failed\n");
+#endif
+				return -4;
+			}
 		}
 	}
 
@@ -1514,9 +1644,27 @@ static int jpc_dec_process_ppt(jpc_dec_t *dec, jpc_ms_t *ms)
 
 static int jpc_dec_process_com(jpc_dec_t *dec, jpc_ms_t *ms)
 {
-	/* Eliminate compiler warnings about unused variables. */
-	dec = 0;
-	ms = 0;
+	float lon_min, lon_max, lat_min, lat_max;
+	char* cptr;
+
+	// JMW
+	if (dec->xcsoar) {
+		char sTmp[128];
+		jpc_com_t *com = &ms->parms.com;
+
+		if (ms->len < sizeof(sTmp)) {
+			strncpy(sTmp, (const char *)com->data, ms->len-2); // build a null-terminated string
+			sTmp[ms->len-2]= '\0';
+			cptr = strstr (sTmp, "XCSoar");
+			if (cptr) {
+				sscanf(cptr+6, "%f %f %f %f", &lon_min, &lon_max, &lat_min, &lat_max);
+				jas_rtc_SetLatLonBounds(lon_min, lon_max, lat_min, lat_max);
+				return 0;
+			}
+		}
+		// Error! XCSoar header text not found
+		return -1;
+	}
 
 	return 0;
 }
@@ -1934,6 +2082,7 @@ static jpc_dec_t *jpc_dec_create(jpc_dec_importopts_t *impopts, jas_stream_t *in
 	dec->cp = 0;
 	dec->maxlyrs = impopts->maxlyrs;
 	dec->maxpkts = impopts->maxpkts;
+	dec->xcsoar = impopts->xcsoar;
 dec->numpkts = 0;
 	dec->ppmseqno = 0;
 	dec->state = 0;

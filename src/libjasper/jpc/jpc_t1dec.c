@@ -152,10 +152,19 @@ int jpc_dec_decodecblks(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 	int prccnt;
 	jpc_dec_cblk_t *cblk;
 	int cblkcnt;
+	int ilevel;
 
 	for (compcnt = dec->numcomps, tcomp = tile->tcomps; compcnt > 0;
 	  --compcnt, ++tcomp) {
-		for (rlvlcnt = tcomp->numrlvls, rlvl = tcomp->rlvls;
+
+		ilevel = tcomp->numrlvls;
+		// JMW
+		if (dec->xcsoar == 2) {
+			// JMW don't do this, too many errors
+			//ilevel = min(ilevel,1);
+		}
+
+		for (rlvlcnt = ilevel, rlvl = tcomp->rlvls;
 		  rlvlcnt > 0; --rlvlcnt, ++rlvl) {
 			if (!rlvl->bands) {
 				continue;
