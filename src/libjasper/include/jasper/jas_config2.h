@@ -70,18 +70,34 @@
  * normally defined by configure.
  */
 
+#if !defined(_WIN32_WCE) || defined(__BORLANDC__) || defined(__GNUC__)
 #define	uchar		unsigned char
 #define	longlong	long long
 #define	ulonglong	unsigned long long
 /*#define	ssize_t		int*/
+#endif
 
 #define	HAVE_FCNTL_H		1
 #define	HAVE_LIMITS_H		1
+
+#ifdef HAVE_MSVCRT
 #define	HAVE_IO_H		1
+#endif
+
+#ifdef WIN32
 #define	HAVE_WINDOWS_H		1
+#endif
+
 #define	HAVE_SYS_TYPES_H	1
+
+#if !defined(HAVE_STDLIB_H)
 #define	HAVE_STDLIB_H		1
+#endif
+
+#if !defined(HAVE_STDDEF_H)
 #define	HAVE_STDDEF_H		1
+#endif
+
 #define STDC_HEADERS 1
 #define HAVE_STRING_H 1
 #define HAVE_STRINGS_H 1
