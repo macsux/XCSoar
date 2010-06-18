@@ -237,7 +237,7 @@ jas_image_t *jpc_decode(jas_stream_t *in, const char *optstr)
 {
 	jpc_dec_importopts_t opts;
 	jpc_dec_t *dec;
-	jas_image_t *image;
+	jas_image_t *image = 0;
   unsigned int i;
 
 	dec = 0;
@@ -265,7 +265,7 @@ jas_image_t *jpc_decode(jas_stream_t *in, const char *optstr)
 
   // dima: define the default for color space
 	jas_image_setclrspc(dec->image, JAS_CLRSPC_SGRAY);
-  for (i=0; i<jas_image_numcmpts(dec->image); ++i)
+  for (i=0; i<(unsigned int)jas_image_numcmpts(dec->image); ++i)
 		jas_image_setcmpttype(dec->image, i, JAS_IMAGE_CT_COLOR(JAS_CLRSPC_CHANIND_GRAY_Y));
 
 
@@ -811,7 +811,7 @@ static int jpc_dec_tileinit(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 			return -1;
 		}
 		if (!(tcomp->tsfb = jpc_cod_gettsfb(ccp->qmfbid,
-		  tcomp->numrlvls - 1))) {
+		  ccp->numrlvls - 1))) {
 			return -1;
 		}
 {

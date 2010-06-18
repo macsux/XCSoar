@@ -79,7 +79,7 @@
 #include "jasper/jas_version.h"
 
 // begin: dima
-#include "../tiff/geotiff_buffer.h"
+//#include "../tiff/geotiff_buffer.h"
 // end: dima
 
 #include "jp2_cod.h"
