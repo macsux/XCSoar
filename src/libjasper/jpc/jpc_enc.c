@@ -212,7 +212,12 @@ typedef enum {
 	OPT_NUMGBITS,
 	OPT_RATE,
 	OPT_ILYRRATES,
-	OPT_JP2OVERHEAD
+	OPT_JP2OVERHEAD,
+
+	OPT_LATMIN,
+	OPT_LATMAX,
+	OPT_LONMIN,
+	OPT_LONMAX
 } optid_t;
 
 jas_taginfo_t encopts[] = {
@@ -243,6 +248,10 @@ jas_taginfo_t encopts[] = {
 	{OPT_RATE, "rate"},
 	{OPT_ILYRRATES, "ilyrrates"},
 	{OPT_JP2OVERHEAD, "_jp2overhead"},
+	{OPT_LONMIN, "lonmin"},
+	{OPT_LONMAX, "lonmax"},
+	{OPT_LATMIN, "latmin"},
+	{OPT_LATMAX, "latmax"},
 	{-1, 0}
 };
 
@@ -391,6 +400,13 @@ static jpc_enc_cp_t *cp_create(char *optstr, jas_image_t *image)
 	cp->tilewidth = 0;
 	cp->tileheight = 0;
 	cp->numcmpts = jas_image_numcmpts(image);
+
+	// JMW
+	cp->xcsoar_mode = 0;
+	cp->lon_min = 0;
+	cp->lon_max = 0;
+	cp->lat_min = 0;
+	cp->lat_max = 0;
 
 	hsteplcm = 1;
 	vsteplcm = 1;
@@ -565,6 +581,24 @@ static jpc_enc_cp_t *cp_create(char *optstr, jas_image_t *image)
 		case OPT_JP2OVERHEAD:
 			jp2overhead = atoi(jas_tvparser_getval(tvp));
 			break;
+
+		case OPT_LATMIN:
+		  cp->xcsoar_mode = 1;
+		  cp->lat_min = atof(jas_tvparser_getval(tvp));
+		  break;
+		case OPT_LATMAX:
+		  cp->xcsoar_mode = 1;
+		  cp->lat_max = atof(jas_tvparser_getval(tvp));
+		  break;
+		case OPT_LONMIN:
+		  cp->xcsoar_mode = 1;
+		  cp->lon_min = atof(jas_tvparser_getval(tvp));
+		  break;
+		case OPT_LONMAX:
+		  cp->xcsoar_mode = 1;
+		  cp->lon_max = atof(jas_tvparser_getval(tvp));
+		  break;
+
 		default:
 #if 0 // JMW
 			fprintf(stderr, "warning: ignoring invalid option %s\n",
@@ -1017,7 +1051,14 @@ startoff = jas_stream_getrwcount(enc->out);
 	if (!(enc->mrk = jpc_ms_create(JPC_MS_COM))) {
 		return -1;
 	}
-	sprintf(buf, "Creator: GeoJasPer %s JasPer %s", GJAS_VERSION, jas_getversion());
+
+	// JMW
+	if (cp->xcsoar_mode) {
+	  sprintf(buf, "Creator: GeoJasPer %s JasPer %s XCSoar %f %f %f %f", GJAS_VERSION, jas_getversion(),
+		  cp->lon_min, cp->lon_max, cp->lat_min, cp->lat_max);
+	} else {
+	  sprintf(buf, "Creator: GeoJasPer %s JasPer %s XCSoar", GJAS_VERSION, jas_getversion());
+	}
 	com = &enc->mrk->parms.com;
 	com->len = strlen(buf);
 	com->regid = JPC_COM_LATIN;
