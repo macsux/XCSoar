@@ -58,4 +58,4 @@
 
 EXTRA_DIST = README
 
-SUBDIRS = libjasper appl msvc
+SUBDIRS = libproj libjasper appl msvc

@@ -331,6 +331,7 @@ int jpg_encode(jas_image_t *image, jas_stream_t *out, char *optstr)
 	rewind(output_file);
 	jpg_copyfiletostream(out, output_file);
 	fclose(output_file);
+  jas_matrix_destroy(src_mgr->data);
 	output_file = 0;
 
 	return 0;

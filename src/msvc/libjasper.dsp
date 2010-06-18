@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "libjasper___Win32_Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\libjasper\include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "JAS_WIN_MSVC_BUILD" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "..\libjasper\include" /I "..\libjpeg" /I "..\libtiff" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "JAS_WIN_MSVC_BUILD" /D "HAVE_JASPER_UUID" /FR /YX /FD /O3 -O3 /QaxW -QaxW /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "libjasper___Win32_Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\libjasper\include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "JAS_WIN_MSVC_BUILD" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "..\libjasper\include" /I "..\libjpeg" /I "..\libtiff" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "JAS_WIN_MSVC_BUILD" /D "HAVE_JASPER_UUID" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -94,6 +94,10 @@ SOURCE=..\libjasper\bmp\bmp_dec.c
 # Begin Source File
 
 SOURCE=..\libjasper\bmp\bmp_enc.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libjasper\tiff\geotiff_buffer.c
 # End Source File
 # Begin Source File
 
@@ -237,7 +241,11 @@ SOURCE=..\libjasper\jpc\jpc_util.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\libjasper\jpg\jpg_dummy.c
+SOURCE=..\libjasper\jpg\jpg_dec.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libjasper\jpg\jpg_enc.c
 # End Source File
 # Begin Source File
 
@@ -283,6 +291,22 @@ SOURCE=..\libjasper\ras\ras_dec.c
 
 SOURCE=..\libjasper\ras\ras_enc.c
 # End Source File
+# Begin Source File
+
+SOURCE=..\libjasper\tiff\tif_memio.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libjasper\tiff\tiff_cod.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libjasper\tiff\tiff_dec.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libjasper\tiff\tiff_enc.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -298,6 +322,10 @@ SOURCE=..\libjasper\include\jasper\jas_cm.h
 # Begin Source File
 
 SOURCE=..\libjasper\include\jasper\jas_icc.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\libjasper\include\jasper\jas_version.h
 # End Source File
 # Begin Source File
 

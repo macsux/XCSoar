@@ -248,10 +248,12 @@ typedef struct {
 /*
  * File descriptor file object.
  */
+#define DIM_MAX_FILE_NAME 2048
 typedef struct {
 	int fd;
 	int flags;
-	char pathname[L_tmpnam + 1];
+	//char pathname[L_tmpnam + 1];
+	char pathname[DIM_MAX_FILE_NAME]; // dima
 } jas_stream_fileobj_t;
 
 #define	JAS_STREAM_FILEOBJ_DELONCLOSE	0x01

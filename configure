@@ -9402,7 +9402,6 @@ else
   HAVE_LIBJPEG_FALSE=
 fi
 
-
 ############################################################
 # Check for OpenGL libraries.
 ############################################################
@@ -14023,7 +14022,7 @@ fi
 # Generate the makefiles.
 ############################################################
 
-                                                                                                                                                                          ac_config_files="$ac_config_files Makefile src/Makefile src/appl/Makefile src/libjasper/Makefile src/libjasper/base/Makefile src/libjasper/bmp/Makefile src/libjasper/include/Makefile src/libjasper/include/jasper/Makefile src/libjasper/jp2/Makefile src/libjasper/jpc/Makefile src/libjasper/jpg/Makefile src/libjasper/mif/Makefile src/libjasper/pgx/Makefile src/libjasper/pnm/Makefile src/libjasper/ras/Makefile src/msvc/Makefile jasper.spec"
+                                                                                                                                                                          ac_config_files="$ac_config_files Makefile src/Makefile src/appl/Makefile src/libproj/Makefile src/libjasper/Makefile src/libjasper/base/Makefile src/libjasper/bmp/Makefile src/libjasper/include/Makefile src/libjasper/include/jasper/Makefile src/libjasper/jp2/Makefile src/libjasper/jpc/Makefile src/libjasper/jpg/Makefile src/libjasper/mif/Makefile src/libjasper/pgx/Makefile src/libjasper/pnm/Makefile src/libjasper/ras/Makefile src/libjasper/tiffgeo/Makefile src/libjasper/tiff/Makefile src/msvc/Makefile jasper.spec"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -14582,6 +14581,7 @@ do
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
   "src/appl/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/appl/Makefile" ;;
+  "src/libproj/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/libproj/Makefile" ;;
   "src/libjasper/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/libjasper/Makefile" ;;
   "src/libjasper/base/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/libjasper/base/Makefile" ;;
   "src/libjasper/bmp/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/libjasper/bmp/Makefile" ;;
@@ -14594,6 +14594,8 @@ do
   "src/libjasper/pgx/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/libjasper/pgx/Makefile" ;;
   "src/libjasper/pnm/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/libjasper/pnm/Makefile" ;;
   "src/libjasper/ras/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/libjasper/ras/Makefile" ;;
+  "src/libjasper/tiffgeo/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/libjasper/tiffgeo/Makefile" ;;
+  "src/libjasper/tiff/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/libjasper/tiff/Makefile" ;;
   "src/msvc/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/msvc/Makefile" ;;
   "jasper.spec" ) CONFIG_FILES="$CONFIG_FILES jasper.spec" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;

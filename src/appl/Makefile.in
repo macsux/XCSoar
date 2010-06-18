@@ -162,9 +162,10 @@ install_sh = @install_sh@
 @HAVE_OPENGL_TRUE@EXTRA_JIV = 
 @HAVE_OPENGL_FALSE@EXTRA_JIV = jiv
 
-bin_PROGRAMS = jasper $(BIN_JIV) imgcmp imginfo
+bin_PROGRAMS = geojasper jasper $(BIN_JIV) imgcmp imginfo
 EXTRA_PROGRAMS = $(EXTRA_JIV) dummy
 
+geojasper_SOURCES = geojasper.c
 jasper_SOURCES = jasper.c
 imgcmp_SOURCES = imgcmp.c
 imginfo_SOURCES = imginfo.c
@@ -174,6 +175,7 @@ jiv_SOURCES = jiv.c
 INCLUDES = -I$(top_srcdir)/src/libjasper/include
 
 MYLDFLAGS = ../libjasper/libjasper.la
+geojasper_LDADD = $(MYLDFLAGS)
 jasper_LDADD = $(MYLDFLAGS)
 imgcmp_LDADD = $(MYLDFLAGS)
 imginfo_LDADD = $(MYLDFLAGS)
@@ -186,9 +188,9 @@ CONFIG_HEADER = \
 CONFIG_CLEAN_FILES =
 @HAVE_OPENGL_TRUE@EXTRA_PROGRAMS = dummy$(EXEEXT)
 @HAVE_OPENGL_FALSE@EXTRA_PROGRAMS = jiv$(EXEEXT) dummy$(EXEEXT)
-@HAVE_OPENGL_TRUE@bin_PROGRAMS = jasper$(EXEEXT) jiv$(EXEEXT) \
+@HAVE_OPENGL_TRUE@bin_PROGRAMS = geojasper$(EXEEXT) jasper$(EXEEXT) jiv$(EXEEXT) \
 @HAVE_OPENGL_TRUE@	imgcmp$(EXEEXT) imginfo$(EXEEXT)
-@HAVE_OPENGL_FALSE@bin_PROGRAMS = jasper$(EXEEXT) imgcmp$(EXEEXT) \
+@HAVE_OPENGL_FALSE@bin_PROGRAMS = geojasper$(EXEEXT) jasper$(EXEEXT) imgcmp$(EXEEXT) \
 @HAVE_OPENGL_FALSE@	imginfo$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
@@ -204,6 +206,10 @@ am_imginfo_OBJECTS = imginfo.$(OBJEXT)
 imginfo_OBJECTS = $(am_imginfo_OBJECTS)
 imginfo_DEPENDENCIES = ../libjasper/libjasper.la
 imginfo_LDFLAGS =
+am_geojasper_OBJECTS = geojasper.$(OBJEXT)
+geojasper_OBJECTS = $(am_geojasper_OBJECTS)
+geojasper_DEPENDENCIES = ../libjasper/libjasper.la
+geojasper_LDFLAGS =
 am_jasper_OBJECTS = jasper.$(OBJEXT)
 jasper_OBJECTS = $(am_jasper_OBJECTS)
 jasper_DEPENDENCIES = ../libjasper/libjasper.la
@@ -221,7 +227,7 @@ LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/acaux/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/dummy.Po ./$(DEPDIR)/imgcmp.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/imginfo.Po ./$(DEPDIR)/jasper.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/imginfo.Po ./$(DEPDIR)/geojasper.Po ./$(DEPDIR)/jasper.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/jiv.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -232,9 +238,9 @@ LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 DIST_SOURCES = $(dummy_SOURCES) $(imgcmp_SOURCES) $(imginfo_SOURCES) \
-	$(jasper_SOURCES) $(jiv_SOURCES)
+	$(geojasper_SOURCES) $(jasper_SOURCES) $(jiv_SOURCES)
 DIST_COMMON = Makefile.am Makefile.in
-SOURCES = $(dummy_SOURCES) $(imgcmp_SOURCES) $(imginfo_SOURCES) $(jasper_SOURCES) $(jiv_SOURCES)
+SOURCES = $(dummy_SOURCES) $(imgcmp_SOURCES) $(imginfo_SOURCES) $(geojasper_SOURCES) $(jasper_SOURCES) $(jiv_SOURCES)
 
 all: all-am
 
@@ -283,9 +289,12 @@ imgcmp$(EXEEXT): $(imgcmp_OBJECTS) $(imgcmp_DEPENDENCIES)
 imginfo$(EXEEXT): $(imginfo_OBJECTS) $(imginfo_DEPENDENCIES) 
 	@rm -f imginfo$(EXEEXT)
 	$(LINK) $(imginfo_LDFLAGS) $(imginfo_OBJECTS) $(imginfo_LDADD) $(LIBS)
+geojasper$(EXEEXT): $(geojasper_OBJECTS) $(geojasper_DEPENDENCIES) 
+	@rm -f geojasper$(EXEEXT)
+	$(LINK) $(geojasper_LDFLAGS) $(geojasper_OBJECTS) $(geojasper_LDADD) $(LIBS)
 jasper$(EXEEXT): $(jasper_OBJECTS) $(jasper_DEPENDENCIES) 
 	@rm -f jasper$(EXEEXT)
-	$(LINK) $(jasper_LDFLAGS) $(jasper_OBJECTS) $(jasper_LDADD) $(LIBS)
+	$(LINK) $(jasper_LDFLAGS) $(jasper_OBJECTS) $(jasper_LDADD) $(LIBS)	
 jiv$(EXEEXT): $(jiv_OBJECTS) $(jiv_DEPENDENCIES) 
 	@rm -f jiv$(EXEEXT)
 	$(LINK) $(jiv_LDFLAGS) $(jiv_OBJECTS) $(jiv_LDADD) $(LIBS)
@@ -299,6 +308,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dummy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/imgcmp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/imginfo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/geojasper.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jasper.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jiv.Po@am__quote@
 

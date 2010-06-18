@@ -169,7 +169,9 @@ SUBDIRS = \
 	mif \
 	pgx \
 	pnm \
-	ras
+	ras \
+	tiffgeo \
+        tiff 
 
 
 lib_LTLIBRARIES = libjasper.la
@@ -183,7 +185,11 @@ libjasper_la_LIBADD = \
 	mif/libmif.la \
 	pgx/libpgx.la \
 	pnm/libpnm.la \
-	ras/libras.la
+	ras/libras.la \
+	tiffgeo/libgtif.la \
+        tiff/libjtif.la \
+        ../libproj/libproj.la
+
 
 libjasper_la_LDFLAGS = \
 	-release $(LT_RELEASE) \
@@ -198,7 +204,8 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 
 libjasper_la_DEPENDENCIES = base/libbase.la bmp/libbmp.la jp2/libjp2.la \
 	jpc/libjpc.la jpg/libjpg.la mif/libmif.la pgx/libpgx.la \
-	pnm/libpnm.la ras/libras.la
+	pnm/libpnm.la ras/libras.la tiffgeo/libgtif.la tiff/libjtif.la \
+	../libproj/libproj.la
 am_libjasper_la_OBJECTS = dummy.lo
 libjasper_la_OBJECTS = $(am_libjasper_la_OBJECTS)
 

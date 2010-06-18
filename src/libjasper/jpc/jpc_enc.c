@@ -961,7 +961,7 @@ startoff = jas_stream_getrwcount(enc->out);
 	if (!(enc->mrk = jpc_ms_create(JPC_MS_COM))) {
 		return -1;
 	}
-	sprintf(buf, "Creator: JasPer Version %s", jas_getversion());
+	sprintf(buf, "Creator: GeoJasPer %s JasPer %s", GJAS_VERSION, jas_getversion());
 	com = &enc->mrk->parms.com;
 	com->len = strlen(buf);
 	com->regid = JPC_COM_LATIN;

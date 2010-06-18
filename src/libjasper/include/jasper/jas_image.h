@@ -3,6 +3,9 @@
  *   British Columbia.
  * Copyright (c) 2001-2003 Michael David Adams.
  * All rights reserved.
+
+   Revision:
+     11/07/2003 15:00 - auxBuffer added for j_image_t : dima <dima@dimin.net>
  */
 
 /* __START_OF_JASPER_LICENSE__
@@ -180,6 +183,15 @@ typedef struct {
 
 /* Image class. */
 
+// dima 
+// this field here added for aditional information about the image
+// e.g. GeoTiff information
+typedef struct {
+  int id;    // just some info about the buffer contents
+  long size; // size of the buffer
+  unsigned char *buf; // the buffer itself
+} jas_aux_buffer_t;
+
 typedef struct {
 
 	jas_image_coord_t tlx_;
@@ -211,6 +223,12 @@ typedef struct {
 	jas_cmprof_t *cmprof_;
 
 	bool inmem_;
+
+  // dima 
+  // this field here added for aditional information about the image
+  // e.g. GeoTiff information
+  jas_aux_buffer_t aux_buf;
+
 
 } jas_image_t;
 
@@ -556,6 +574,14 @@ jas_image_t *pgx_decode(jas_stream_t *in, char *optstr);
 int pgx_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
 int pgx_validate(jas_stream_t *in);
 #endif
+
+#if !defined(EXCLUDE_TIFF_SUPPORT)
+/* Format-dependent operations for TIFF support. */
+jas_image_t *tiff_decode(jas_stream_t *in, char *optstr);
+int tiff_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
+int tiff_validate(jas_stream_t *in);
+#endif
+
 
 #ifdef __cplusplus
 }

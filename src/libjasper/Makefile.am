@@ -68,7 +68,9 @@ SUBDIRS = \
 	mif \
 	pgx \
 	pnm \
-	ras
+	ras \
+	tiffgeo \
+        tiff 
 
 lib_LTLIBRARIES = libjasper.la
 libjasper_la_SOURCES = dummy.c
@@ -81,7 +83,12 @@ libjasper_la_LIBADD = \
 	mif/libmif.la \
 	pgx/libpgx.la \
 	pnm/libpnm.la \
-	ras/libras.la
+	ras/libras.la \
+	tiffgeo/libgtif.la \
+        tiff/libjtif.la \
+        ../libproj/libproj.la
+	
+	
 libjasper_la_LDFLAGS = \
 	-release $(LT_RELEASE) \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)

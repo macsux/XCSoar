@@ -147,6 +147,14 @@ int jas_init()
 	++fmtid;
 #endif
 
+#if !defined(EXCLUDE_TIFF_SUPPORT)
+	fmtops.decode = tiff_decode;
+	fmtops.encode = tiff_encode;
+	fmtops.validate = tiff_validate;
+	jas_image_addfmt(fmtid, "tif", "tif", "Tagged Image File (TIFF)", &fmtops);
+	++fmtid;
+#endif
+
 	/* We must not register the JasPer library exit handler until after
 	at least one memory allocation is performed.  This is desirable
 	as it ensures that the JasPer exit handler is called before the

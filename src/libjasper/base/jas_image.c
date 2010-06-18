@@ -3,6 +3,10 @@
  *   British Columbia.
  * Copyright (c) 2001-2003 Michael David Adams.
  * All rights reserved.
+
+   Revision: dima <dima@dimin.net>
+     11/07/2003 15:00 - aux_buf added for j_image_t
+     22/09/2003 14:40 - small correction in jas_image_writecmpt
  */
 
 /* __START_OF_JASPER_LICENSE__
@@ -202,6 +206,11 @@ jas_image_t *jas_image_create0()
 	image->inmem_ = true;
 	image->cmprof_ = 0;
 
+  // dima - buffer defines
+	image->aux_buf.id   = -1;
+  image->aux_buf.size = 0;
+  image->aux_buf.buf  = NULL;
+
 	return image;
 }
 
@@ -282,6 +291,10 @@ static jas_image_cmpt_t *jas_image_cmpt_copy(jas_image_cmpt_t *cmpt)
 void jas_image_destroy(jas_image_t *image)
 {
 	int i;
+
+  // dima - free buffer
+  if ( (image->aux_buf.size != 0) && (image->aux_buf.buf != NULL) )
+  jas_free(image->aux_buf.buf);
 
 	if (image->cmpts_) {
 		for (i = 0; i < image->numcmpts_; ++i) {
@@ -478,9 +491,9 @@ int jas_image_writecmpt(jas_image_t *image, int cmptno, jas_image_coord_t x, jas
 		return -1;
 	}
 
-	if (jas_matrix_numrows(data) != height || jas_matrix_numcols(data) != width) {
+	if (jas_matrix_numrows(data) < height || jas_matrix_numcols(data) < width) {
 		return -1;
-	}
+	} // dima, change != to <
 
 	dr = jas_matrix_getref(data, 0, 0);
 	drs = jas_matrix_rowstep(data);

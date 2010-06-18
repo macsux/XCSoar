@@ -71,6 +71,23 @@
 
 /* Note: The jpeglib.h header file does not include definitions of
   FILE, size_t, etc. */
+
+#ifdef FAR
+#undef FAR
+#endif
+
+#if defined(__RPCNDR_H__)
+#define HAVE_BOOLEAN
+#define boolean unsigned int
+#endif
+
+#define XMD_H // Shut JPEGlib up.
+
 #include <jpeglib.h>
+
+#ifdef const
+#undef const // Remove crazy C hackery in jconfig.h
+#endif
+
 
 #endif

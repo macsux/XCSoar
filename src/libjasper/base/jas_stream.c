@@ -275,7 +275,9 @@ jas_stream_t *jas_stream_fopen(const char *filename, const char *mode)
 	}
 	obj->fd = -1;
 	obj->flags = 0;
-	obj->pathname[0] = '\0';
+	//obj->pathname[0] = '\0';
+  strncpy(obj->pathname, filename, DIM_MAX_FILE_NAME); //dima
+
 	stream->obj_ = (void *) obj;
 
 	/* Select the operations for a file stream object. */

@@ -361,6 +361,7 @@ AC_OUTPUT([
 Makefile
 src/Makefile
 src/appl/Makefile
+src/libproj/Makefile
 src/libjasper/Makefile
 src/libjasper/base/Makefile
 src/libjasper/bmp/Makefile
@@ -373,6 +374,8 @@ src/libjasper/mif/Makefile
 src/libjasper/pgx/Makefile
 src/libjasper/pnm/Makefile
 src/libjasper/ras/Makefile
+src/libjasper/tiffgeo/Makefile
+src/libjasper/tiff/Makefile 
 src/msvc/Makefile
 jasper.spec
 ])

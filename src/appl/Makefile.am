@@ -64,9 +64,10 @@ BIN_JIV =
 EXTRA_JIV = jiv
 endif
 
-bin_PROGRAMS = jasper $(BIN_JIV) imgcmp imginfo
+bin_PROGRAMS = geojasper jasper $(BIN_JIV) imgcmp imginfo
 EXTRA_PROGRAMS = $(EXTRA_JIV) dummy
 
+geojasper_SOURCES = geojasper.c
 jasper_SOURCES = jasper.c
 imgcmp_SOURCES = imgcmp.c
 imginfo_SOURCES = imginfo.c
@@ -76,6 +77,7 @@ jiv_SOURCES = jiv.c
 INCLUDES = -I$(top_srcdir)/src/libjasper/include
 
 MYLDFLAGS = ../libjasper/libjasper.la
+geojasper_LDADD = $(MYLDFLAGS)
 jasper_LDADD = $(MYLDFLAGS)
 imgcmp_LDADD = $(MYLDFLAGS)
 imginfo_LDADD = $(MYLDFLAGS)
