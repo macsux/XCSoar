@@ -84,7 +84,7 @@ extern "C" {
 #define	JAS_VERSION		"unknown"
 #endif
 
-#define GJAS_VERSION "1.3.1"
+#define GJAS_VERSION "1.3.1-xcsoar"
 
 #define	JAS_COPYRIGHT \
   "GeoJasPer Copyright (c) 2003-2006 Dmitry Fedorov.\n" \
