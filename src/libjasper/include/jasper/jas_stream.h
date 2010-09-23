@@ -90,8 +90,9 @@
 extern "C" {
 #endif
 
-// JMW added zziplib support
+#ifdef GEOJASPER_XCSOAR
 #include <zzip/lib.h>
+#endif
 
 /******************************************************************************\
 * Constants.
@@ -257,7 +258,9 @@ typedef struct {
 	int flags;
 	//char pathname[L_tmpnam + 1];
 	char pathname[DIM_MAX_FILE_NAME]; // dima
+#ifdef GEOJASPER_XCSOAR
 	ZZIP_FILE* zfile; // JMW
+#endif
 } jas_stream_fileobj_t;
 
 #define	JAS_STREAM_FILEOBJ_DELONCLOSE	0x01
@@ -412,6 +415,11 @@ int jas_stream_flush(jas_stream_t *stream);
 
 /* Copy data from one stream to another. */
 int jas_stream_copy(jas_stream_t *dst, jas_stream_t *src, int n);
+
+#ifndef GEOJASPER_XCSOAR
+/* Display stream contents (for debugging purposes). */
+int jas_stream_display(jas_stream_t *stream, FILE *fp, int n);
+#endif
 
 /* Consume (i.e., discard) characters from stream. */
 int jas_stream_gobble(jas_stream_t *stream, int n);

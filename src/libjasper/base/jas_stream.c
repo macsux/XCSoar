@@ -106,6 +106,13 @@ static int mem_write(jas_stream_obj_t *obj, char *buf, int cnt);
 static long mem_seek(jas_stream_obj_t *obj, long offset, int origin);
 static int mem_close(jas_stream_obj_t *obj);
 
+#ifndef GEOJASPER_XCSOAR
+static int sfile_read(jas_stream_obj_t *obj, char *buf, int cnt);
+static int sfile_write(jas_stream_obj_t *obj, char *buf, int cnt);
+static long sfile_seek(jas_stream_obj_t *obj, long offset, int origin);
+static int sfile_close(jas_stream_obj_t *obj);
+#endif
+
 static int file_read(jas_stream_obj_t *obj, char *buf, int cnt);
 static int file_write(jas_stream_obj_t *obj, char *buf, int cnt);
 static long file_seek(jas_stream_obj_t *obj, long offset, int origin);
@@ -121,6 +128,15 @@ static jas_stream_ops_t jas_stream_fileops = {
 	file_seek,
 	file_close
 };
+
+#ifndef GEOJASPER_XCSOAR
+static jas_stream_ops_t jas_stream_sfileops = {
+	sfile_read,
+	sfile_write,
+	sfile_seek,
+	sfile_close
+};
+#endif
 
 static jas_stream_ops_t jas_stream_memops = {
 	mem_read,
@@ -272,23 +288,74 @@ jas_stream_t *jas_stream_fopen(const char *filename, const char *mode)
 	stream->ops_ = &jas_stream_fileops;
 
 	/* Open the underlying file. */
-	/*
+#ifndef GEOJASPER_XCSOAR
 	if ((obj->fd = open(filename, openflags, JAS_STREAM_PERMS)) < 0) {
 		jas_stream_destroy(stream);
 		return 0;
 	}
-        */
+#else
 	// JMW quick hack!
 	if ((obj->zfile = zzip_fopen(filename, "rb")) == NULL) {
 		jas_stream_close(stream);
 		return 0;
 	}
+#endif
 
 	/* By default, use full buffering for this type of stream. */
 	jas_stream_initbuf(stream, JAS_STREAM_FULLBUF, 0, 0);
 
 	return stream;
 }
+
+#ifndef GEOJASPER_XCSOAR
+jas_stream_t *jas_stream_freopen(const char *path, const char *mode, FILE *fp)
+{
+	jas_stream_t *stream;
+	int openflags;
+
+	/* Eliminate compiler warning about unused variable. */
+	path = 0;
+
+	/* Allocate a stream object. */
+	if (!(stream = jas_stream_create())) {
+		return 0;
+	}
+
+	/* Parse the mode string. */
+	stream->openmode_ = jas_strtoopenmode(mode);
+
+	/* Determine the correct flags to use for opening the file. */
+	if ((stream->openmode_ & JAS_STREAM_READ) &&
+	  (stream->openmode_ & JAS_STREAM_WRITE)) {
+		openflags = O_RDWR;
+	} else if (stream->openmode_ & JAS_STREAM_READ) {
+		openflags = O_RDONLY;
+	} else if (stream->openmode_ & JAS_STREAM_WRITE) {
+		openflags = O_WRONLY;
+	} else {
+		openflags = 0;
+	}
+	if (stream->openmode_ & JAS_STREAM_APPEND) {
+		openflags |= O_APPEND;
+	}
+	if (stream->openmode_ & JAS_STREAM_BINARY) {
+		openflags |= O_BINARY;
+	}
+	if (stream->openmode_ & JAS_STREAM_CREATE) {
+		openflags |= O_CREAT | O_TRUNC;
+	}
+
+	stream->obj_ = JAS_CAST(void *, fp);
+
+	/* Select the operations for a file stream object. */
+	stream->ops_ = &jas_stream_sfileops;
+
+	/* By default, use full buffering for this type of stream. */
+	jas_stream_initbuf(stream, JAS_STREAM_FULLBUF, 0, 0);
+
+	return stream;
+}
+#endif
 
 jas_stream_t *jas_stream_tmpfile()
 {
@@ -357,7 +424,8 @@ jas_stream_t *jas_stream_fdopen(int fd, const char *mode)
 	/* Parse the mode string. */
 	stream->openmode_ = jas_strtoopenmode(mode);
 
-#if defined(HAVE_MSVCRT) && !defined(_WIN32_WCE)
+#if (!defined(GEOJASPER_XCSOAR) && defined(WIN32)) || \
+    (defined(GEOJASPER_XCSOAR) && defined(HAVE_MSVCRT) && !defined(_WIN32_WCE))
 	/* Argh!!!  Someone ought to banish text mode (i.e., O_TEXT) to the
 	  greatest depths of purgatory! */
 	/* Ensure that the file descriptor is in binary mode, if the caller
@@ -853,6 +921,59 @@ long jas_stream_setrwcount(jas_stream_t *stream, long rwcnt)
 	return old;
 }
 
+#ifndef GEOJASPER_XCSOAR
+int jas_stream_display(jas_stream_t *stream, FILE *fp, int n)
+{
+	unsigned char buf[16];
+	int i;
+	int j;
+	int m;
+	int c;
+	int display;
+	int cnt;
+
+	cnt = n - (n % 16);
+	display = 1;
+
+	for (i = 0; i < n; i += 16) {
+		if (n > 16 && i > 0) {
+			display = (i >= cnt) ? 1 : 0;
+		}
+		if (display) {
+			fprintf(fp, "%08x:", i);
+		}
+		m = JAS_MIN(n - i, 16);
+		for (j = 0; j < m; ++j) {
+			if ((c = jas_stream_getc(stream)) == EOF) {
+				abort();
+				return -1;
+			}
+			buf[j] = c;
+		}
+		if (display) {
+			for (j = 0; j < m; ++j) {
+				fprintf(fp, " %02x", buf[j]);
+			}
+			fputc(' ', fp);
+			for (; j < 16; ++j) {
+				fprintf(fp, "   ");
+			}
+			for (j = 0; j < m; ++j) {
+				if (isprint(buf[j])) {
+					fputc(buf[j], fp);
+				} else {
+					fputc(' ', fp);
+				}
+			}
+			fprintf(fp, "\n");
+		}
+
+
+	}
+	return 0;
+}
+#endif
+
 long jas_stream_length(jas_stream_t *stream)
 {
 	long oldpos;
@@ -990,25 +1111,29 @@ static int mem_close(jas_stream_obj_t *obj)
 static int file_read(jas_stream_obj_t *obj, char *buf, int cnt)
 {
 	jas_stream_fileobj_t *fileobj = JAS_CAST(jas_stream_fileobj_t *, obj);
-	// return read(fileobj->fd, buf, cnt);
+#ifndef GEOJASPER_XCSOAR
+	return read(fileobj->fd, buf, cnt);
+#else
 	// JMW zzlib
 	return zzip_fread(buf, 1, cnt, fileobj->zfile);
-
+#endif
 }
 
 static int file_write(jas_stream_obj_t *obj, char *buf, int cnt)
 {
 	jas_stream_fileobj_t *fileobj = JAS_CAST(jas_stream_fileobj_t *, obj);
-	// JMW not used!!
 	return write(fileobj->fd, buf, cnt);
 }
 
 static long file_seek(jas_stream_obj_t *obj, long offset, int origin)
 {
 	jas_stream_fileobj_t *fileobj = JAS_CAST(jas_stream_fileobj_t *, obj);
-	// return lseek(fileobj->fd, offset, origin);
+#ifndef GEOJASPER_XCSOAR
+	return lseek(fileobj->fd, offset, origin);
+#else
 	// JMW zzlib
 	return zzip_seek(fileobj->zfile, offset, origin);
+#endif
 }
 
 static int file_close(jas_stream_obj_t *obj)
@@ -1016,9 +1141,12 @@ static int file_close(jas_stream_obj_t *obj)
 	jas_stream_fileobj_t *fileobj = JAS_CAST(jas_stream_fileobj_t *, obj);
 	int ret;
 
-	// ret = close(fileobj->fd);
+#ifndef GEOJASPER_XCSOAR
+	ret = close(fileobj->fd);
+#else
 	// JMW zzlib
 	ret = zzip_fclose(fileobj->zfile);
+#endif
 
 	if (fileobj->flags & JAS_STREAM_FILEOBJ_DELONCLOSE) {
 		unlink(fileobj->pathname);
@@ -1026,3 +1154,37 @@ static int file_close(jas_stream_obj_t *obj)
 	jas_free(fileobj);
 	return ret;
 }
+
+#ifndef GEOJASPER_XCSOAR
+/******************************************************************************\
+* Stdio file stream object.
+\******************************************************************************/
+
+static int sfile_read(jas_stream_obj_t *obj, char *buf, int cnt)
+{
+	FILE *fp;
+	fp = JAS_CAST(FILE *, obj);
+	return fread(buf, 1, cnt, fp);
+}
+
+static int sfile_write(jas_stream_obj_t *obj, char *buf, int cnt)
+{
+	FILE *fp;
+	fp = JAS_CAST(FILE *, obj);
+	return fwrite(buf, 1, cnt, fp);
+}
+
+static long sfile_seek(jas_stream_obj_t *obj, long offset, int origin)
+{
+	FILE *fp;
+	fp = JAS_CAST(FILE *, obj);
+	return fseek(fp, offset, origin);
+}
+
+static int sfile_close(jas_stream_obj_t *obj)
+{
+	FILE *fp;
+	fp = JAS_CAST(FILE *, obj);
+	return fclose(fp);
+}
+#endif
