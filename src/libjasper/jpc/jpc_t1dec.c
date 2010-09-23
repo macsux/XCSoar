@@ -228,12 +228,12 @@ static int jpc_dec_decodecblk(jpc_dec_t *dec, jpc_dec_tile_t *tile, jpc_dec_tcom
 			if (cblk->numimsbs > band->numbps) {
 				ccp = &tile->cp->ccps[compno];
 				if (ccp->roishift <= 0) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 					fprintf(stderr, "warning: corrupt code stream\n");
 #endif
 				} else {
 					if (cblk->numimsbs < ccp->roishift - band->numbps) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 						fprintf(stderr, "warning: corrupt code stream\n");
 #endif
 					}
@@ -287,7 +287,7 @@ if (bpno < 0) {
 			}
 
 			if (ret) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 				fprintf(stderr, "coding pass failed passtype=%d segtype=%d\n", passtype, seg->type);
 #endif
 				return -1;
@@ -310,7 +310,7 @@ if (bpno < 0) {
 			  filldata)) < 0) {
 				return -1;
 			} else if (ret > 0) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 				fprintf(stderr, "warning: bad termination pattern detected\n");
 #endif
 			}
@@ -910,7 +910,7 @@ static int dec_clnpass(jpc_dec_t *dec, register jpc_mqdec_t *mqdec, int bitpos, 
 		JPC_T1D_GETBITNOSKEW(mqdec, v, "CLN", "SEGSYM");
 		segsymval = (segsymval << 1) | (v & 1);
 		if (segsymval != 0xa) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 			fprintf(stderr, "warning: bad segmentation symbol\n");
 #endif
 		}
