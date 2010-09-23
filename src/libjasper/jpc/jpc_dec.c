@@ -1137,7 +1137,6 @@ static int jpc_dec_tiledecode(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 	jpc_dec_cmpt_t *cmpt;
 
 	short* dptr;
-	int ilevel = 0;
 
 	if (tile->hidden) return 0;
 
@@ -1152,16 +1151,8 @@ static int jpc_dec_tiledecode(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 	for (compno = 0, tcomp = tile->tcomps; compno < dec->numcomps;
 	  ++compno, ++tcomp) {
 		ccp = &tile->cp->ccps[compno];
-
-		ilevel = tcomp->numrlvls;
-		// JMW
-		if (dec->xcsoar==2) {
-			// JMW don't do this because it can result in significant errors
-			//ilevel = min(ilevel,1);
-		}
-
-		for (rlvlno = 0, rlvl = tcomp->rlvls; rlvlno < ilevel; ++rlvlno, ++rlvl) {
-			//printf(" level %d\n", rlvlno);
+		for (rlvlno = 0, rlvl = tcomp->rlvls; rlvlno < tcomp->numrlvls;
+		  ++rlvlno, ++rlvl) {
 			if (!rlvl->bands) {
 				continue;
 			}
