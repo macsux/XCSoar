@@ -118,13 +118,17 @@ int jas_init()
 
 #if !defined(EXCLUDE_JP2_SUPPORT)
 	fmtops.decode = jp2_decode;
-	// fmtops.encode = jp2_encode;
+#ifndef GEOJASPER_XCSOAR
+	fmtops.encode = jp2_encode;
+#endif
 	fmtops.validate = jp2_validate;
 	jas_image_addfmt(fmtid, "jp2", "jp2",
 	  "JPEG-2000 JP2 File Format Syntax (ISO/IEC 15444-1)", &fmtops);
 	++fmtid;
 	fmtops.decode = jpc_decode;
-	// fmtops.encode = jpc_encode;
+#ifndef GEOJASPER_XCSOAR
+	fmtops.encode = jpc_encode;
+#endif
 	fmtops.validate = jpc_validate;
 	jas_image_addfmt(fmtid, "jpc", "jpc",
 	  "JPEG-2000 Code Stream Syntax (ISO/IEC 15444-1)", &fmtops);
