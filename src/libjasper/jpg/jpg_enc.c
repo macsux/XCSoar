@@ -194,7 +194,7 @@ static void jpg_finish_input(j_compress_ptr cinfo, struct jpg_src_s *sinfo)
 
 /* Save an image to a stream in the the JPG format. */
 
-int jpg_encode(jas_image_t *image, jas_stream_t *out, char *optstr)
+int jpg_encode(jas_image_t *image, jas_stream_t *out, const char *optstr)
 {
 	JDIMENSION numscanlines;
 	struct jpeg_compress_struct cinfo;

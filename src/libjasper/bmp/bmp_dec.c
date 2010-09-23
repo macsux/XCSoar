@@ -95,7 +95,7 @@ static int bmp_gobble(jas_stream_t *in, long n);
 * Interface functions.
 \******************************************************************************/
 
-jas_image_t *bmp_decode(jas_stream_t *in, char *optstr)
+jas_image_t *bmp_decode(jas_stream_t *in, const char *optstr)
 {
 	jas_image_t *image;
 	bmp_hdr_t hdr;

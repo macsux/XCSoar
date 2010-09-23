@@ -822,7 +822,7 @@ static int read_generic_RGBA_tiff(TIFF *tif, jas_matrix_t *cmpts[], jas_image_t 
 * Interface functions.
 \******************************************************************************/
 
-jas_image_t *tiff_decode(jas_stream_t *in, char *optstr)
+jas_image_t *tiff_decode(jas_stream_t *in, const char *optstr)
 {
 	// jasper stuff
   jas_image_t *image;

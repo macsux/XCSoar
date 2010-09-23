@@ -118,7 +118,7 @@ static int pnm_putuint16(jas_stream_t *out, uint_fast16_t val);
 * Save function.
 \******************************************************************************/
 
-int pnm_encode(jas_image_t *image, jas_stream_t *out, char *optstr)
+int pnm_encode(jas_image_t *image, jas_stream_t *out, const char *optstr)
 {
 	int width;
 	int height;

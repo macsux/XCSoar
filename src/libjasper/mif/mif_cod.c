@@ -140,7 +140,7 @@ jas_taginfo_t mif_tags[] = {
 
 /* Load an image from a stream in the MIF format. */
 
-jas_image_t *mif_decode(jas_stream_t *in, char *optstr)
+jas_image_t *mif_decode(jas_stream_t *in, const char *optstr)
 {
 	mif_hdr_t *hdr;
 	jas_image_t *image;
@@ -261,7 +261,7 @@ error:
 
 /* Save an image to a stream in the the MIF format. */
 
-int mif_encode(jas_image_t *image, jas_stream_t *out, char *optstr)
+int mif_encode(jas_image_t *image, jas_stream_t *out, const char *optstr)
 {
 	mif_hdr_t *hdr;
 	jas_image_t *tmpimage;

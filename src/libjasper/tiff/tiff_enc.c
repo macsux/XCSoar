@@ -141,7 +141,7 @@ static int write_tiled_tiff(TIFF *tif, jas_image_t *image)
 * Interface functions.
 \******************************************************************************/
 
-int tiff_encode(jas_image_t *image, jas_stream_t *out, char *optstr)
+int tiff_encode(jas_image_t *image, jas_stream_t *out, const char *optstr)
 {
 	int depth;
 	uint cmptno;

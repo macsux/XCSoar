@@ -109,7 +109,7 @@ static int pnm_allowtrunc = 1;
 * Load function.
 \******************************************************************************/
 
-jas_image_t *pnm_decode(jas_stream_t *in, char *opts)
+jas_image_t *pnm_decode(jas_stream_t *in, const char *opts)
 {
 	pnm_hdr_t hdr;
 	jas_image_t *image;

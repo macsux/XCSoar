@@ -131,7 +131,7 @@ static jas_image_t *jpg_mkimage(j_decompress_ptr cinfo);
 
 /* Load an image from a stream in the JPG format. */
 
-jas_image_t *jpg_decode(jas_stream_t *in, char *optstr)
+jas_image_t *jpg_decode(jas_stream_t *in, const char *optstr)
 {
 	struct jpeg_decompress_struct cinfo;
 	struct jpeg_error_mgr jerr;

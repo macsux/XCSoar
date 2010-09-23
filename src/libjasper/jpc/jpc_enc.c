@@ -285,7 +285,7 @@ jas_taginfo_t modetab[] = {
 * The main encoder entry point.
 \******************************************************************************/
 
-int jpc_encode(jas_image_t *image, jas_stream_t *out, char *optstr)
+int jpc_encode(jas_image_t *image, jas_stream_t *out, const char *optstr)
 {
 	jpc_enc_t *enc;
 	jpc_enc_cp_t *cp;
