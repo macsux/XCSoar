@@ -86,7 +86,7 @@
 
 /* Load an image from a stream in the JPG format. */
 
-jas_image_t *jpg_decode(jas_stream_t *in, char *optstr)
+jas_image_t *jpg_decode(jas_stream_t *in, const char *optstr)
 {
 	fprintf(stderr, "error: JPEG decoder not available\n");
 	fprintf(stderr,
@@ -101,7 +101,7 @@ jas_image_t *jpg_decode(jas_stream_t *in, char *optstr)
 
 /* Save an image to a stream in the the JPG format. */
 
-int jpg_encode(jas_image_t *image, jas_stream_t *out, char *optstr)
+int jpg_encode(jas_image_t *image, jas_stream_t *out, const char *optstr)
 {
 	fprintf(stderr, "error: JPEG encoder not available\n");
 	fprintf(stderr,
