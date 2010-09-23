@@ -76,16 +76,22 @@
 #include "jasper/jas_math.h"
 #include "jasper/jas_debug.h"
 #include "jasper/jas_malloc.h"
+#ifdef GEOJASPER_XCSOAR
 #include "jasper/jas_version.h"
+#endif
 
+#ifndef GEOJASPER_XCSOAR
 // begin: dima
-//#include "../tiff/geotiff_buffer.h"
+#include "../tiff/geotiff_buffer.h"
 // end: dima
+#endif
 
 #include "jp2_cod.h"
 #include "jp2_dec.h"
 
+#ifdef GEOJASPER_XCSOAR
 typedef unsigned int uint;
+#endif
 
 #define	JP2_VALIDATELEN	(JAS_MIN(JP2_JP_LEN + 16, JAS_STREAM_MAXPUTBACK))
 
@@ -251,7 +257,7 @@ jas_image_t *jp2_decode(jas_stream_t *in, const char *optstr)
       exit(0);
     }
     else
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
       fprintf(stdout, "GeoJp2 info found...\n");
 #endif
   }
