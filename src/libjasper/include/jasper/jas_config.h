@@ -11,10 +11,16 @@
 /* If configure is being used, this symbol will be defined automatically
   at this point in the configuration header file. */
 
-/* XCSoar doesn't use autoconf */
-#if 0
+#ifndef GEOJASPER_XCSOAR
 
+/* The preprocessor symbol JAS_WIN_MSVC_BUILD should not be defined
+  unless the JasPer software is being built under Microsoft Windows
+  using Microsoft Visual C. */
+#ifndef	JAS_WIN_MSVC_BUILD
+/* A configure-based build is being used. */
 
+/* Define if building universal (internal helper macro) */
+/* #undef AC_APPLE_UNIVERSAL_BUILD */
 
 /* Extra debugging support */
 /* #undef DEBUG */
@@ -185,3 +191,4 @@
 
 #endif
 
+#endif
