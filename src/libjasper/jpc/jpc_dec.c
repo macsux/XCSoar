@@ -87,8 +87,9 @@
 #include "jpc_t1dec.h"
 #include "jpc_math.h"
 
-// JMW
+#ifdef GEOJASPER_XCSOAR
 #include "jasper/jpc_rtc.h"
+#endif
 
 /******************************************************************************\
 *
@@ -137,6 +138,10 @@ typedef struct {
 /******************************************************************************\
 * Local function prototypes.
 \******************************************************************************/
+
+#ifndef GEOJASPER_XCSOAR
+static int jpc_dec_dump(jpc_dec_t *dec, FILE *out);
+#endif
 
 jpc_ppxstab_t *jpc_ppxstab_create(void);
 void jpc_ppxstab_destroy(jpc_ppxstab_t *tab);
@@ -257,11 +262,13 @@ jas_image_t *jpc_decode(jas_stream_t *in, const char *optstr)
 		goto error;
 	}
 
+#ifdef GEOJASPER_XCSOAR
 	if (dec->xcsoar) {
 		jas_rtc_SetInitialised(true);
 		jpc_dec_destroy(dec);
 		return 0;
 	}
+#endif
 
   // dima: define the default for color space
 	jas_image_setclrspc(dec->image, JAS_CLRSPC_SGRAY);
@@ -338,17 +345,21 @@ static int jpc_dec_parseopts(const char *optstr, jpc_dec_importopts_t *opts)
 			opts->debug = atoi(jas_tvparser_getval(tvp));
 			break;
 		case OPT_XCSOAR:
+#ifdef GEOJASPER_XCSOAR
 			if (jas_rtc_GetScanType()==1) {
 				opts->xcsoar = 2;
 			} else {
+#endif
 				opts->xcsoar = 1;
+#ifdef GEOJASPER_XCSOAR
 			}
+#endif
 			break;
 		case OPT_MAXPKTS:
 			opts->maxpkts = atoi(jas_tvparser_getval(tvp));
 			break;
 		default:
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 			fprintf(stderr, "warning: ignoring invalid option %s\n",
 			  jas_tvparser_gettag(tvp));
 #endif
@@ -383,9 +394,11 @@ static int jpc_dec_decode(jpc_dec_t *dec)
 	int ret;
 	jpc_cstate_t *cstate;
 
+#ifdef GEOJASPER_XCSOAR
 	if (dec->xcsoar) {
 		jas_rtc_SetInitialised(false);
 	}
+#endif
 
 	if (!(cstate = jpc_cstate_create())) {
 		return -1;
@@ -407,7 +420,7 @@ static int jpc_dec_decode(jpc_dec_t *dec)
         return 0;
       }
 
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 			fprintf(stderr, "cannot get marker segment\n");
 #endif
 			return -1;
@@ -419,7 +432,7 @@ static int jpc_dec_decode(jpc_dec_t *dec)
 		/* Ensure that this type of marker segment is permitted
 		  at this point in the code stream. */
 		if (!(dec->state & mstabent->validstates)) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 			fprintf(stderr, "unexpected marker segment type\n");
 #endif
 			jpc_ms_destroy(ms);
@@ -503,11 +516,11 @@ static int jpc_dec_process_sot(jpc_dec_t *dec, jpc_ms_t *ms)
 			compinfo->vstep = cmpt->vstep;
 		}
 
-		// JMW image created here
-
+#ifdef GEOJASPER_XCSOAR
 		if (dec->cmpts) {
 			jas_rtc_SetSize(dec->cmpts->width, dec->cmpts->height);
 		}
+#endif
 
 		// JMW don't create this image in xcsoar mode
 		if (dec->xcsoar == 0 &&
@@ -537,7 +550,7 @@ static int jpc_dec_process_sot(jpc_dec_t *dec, jpc_ms_t *ms)
 	}
 
 	if (JAS_CAST(int, sot->tileno) > dec->numtiles) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 		fprintf(stderr, "invalid tile number in SOT marker segment\n");
 #endif
 		return -1;
@@ -546,6 +559,7 @@ static int jpc_dec_process_sot(jpc_dec_t *dec, jpc_ms_t *ms)
 	dec->curtile = &dec->tiles[sot->tileno];
 	tile = dec->curtile;
 
+#ifdef GEOJASPER_XCSOAR
 	// JMW set tile parms here and get index into the raster array
 	if (dec->xcsoar) {
 		tile->cache_index = sot->tileno;
@@ -559,9 +573,11 @@ static int jpc_dec_process_sot(jpc_dec_t *dec, jpc_ms_t *ms)
 			tile->hidden = !(jas_rtc_TileRequest(sot->tileno));
 		}
 	} else {
+#endif
 		tile->hidden = 0;
+#ifdef GEOJASPER_XCSOAR
 	}
-
+#endif
 	/* Ensure that this is the expected part number. */
 	if (sot->partno != tile->partno) {
 		return -1;
@@ -671,11 +687,16 @@ static int jpc_dec_process_sod(jpc_dec_t *dec, jpc_ms_t *ms)
 		tile->pptstab = 0;
 	}
 
-	// JMW hack
+#ifndef GEOJASPER_XCSOAR
+	if (jas_getdbglevel() >= 10) {
+		jpc_dec_dump(dec, stderr);
+	}
+#endif
+
 	if (!tile->hidden &&
 	  jpc_dec_decodepkts(dec, (tile->pkthdrstream) ? tile->pkthdrstream :
 	  dec->in, dec->in)) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 		fprintf(stderr, "jpc_dec_decodepkts failed\n");
 #endif
 		return -1;
@@ -689,7 +710,7 @@ static int jpc_dec_process_sod(jpc_dec_t *dec, jpc_ms_t *ms)
 		if (curoff < dec->curtileendoff) {
 			n = dec->curtileendoff - curoff;
 			if (!tile->hidden) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 			fprintf(stderr,
 			  "warning: ignoring trailing garbage (%lu bytes)\n",
 			  (unsigned long) n);
@@ -698,14 +719,14 @@ static int jpc_dec_process_sod(jpc_dec_t *dec, jpc_ms_t *ms)
 
 			while (n-- > 0) {
 				if (jas_stream_getc(dec->in) == EOF) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 					fprintf(stderr, "read error\n");
 #endif
 					return -1;
 				}
 			}
 		} else if (curoff > dec->curtileendoff) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 			fprintf(stderr,
 			  "warning: not enough tile data (%lu bytes)\n",
 			  (unsigned long) curoff - dec->curtileendoff);
@@ -811,7 +832,11 @@ static int jpc_dec_tileinit(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 			return -1;
 		}
 		if (!(tcomp->tsfb = jpc_cod_gettsfb(ccp->qmfbid,
+#ifdef GEOJASPER_XCSOAR
 		  ccp->numrlvls - 1))) {
+#else
+		  tcomp->numrlvls - 1))) {
+#endif
 			return -1;
 		}
 {
@@ -1141,7 +1166,7 @@ static int jpc_dec_tiledecode(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 	if (tile->hidden) return 0;
 
 	if (jpc_dec_decodecblks(dec, tile)) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 		fprintf(stderr, "jpc_dec_decodecblks failed\n");
 #endif
 		return -1;
@@ -1236,12 +1261,14 @@ static int jpc_dec_tiledecode(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 	/* Write the data for each component of the image. */
 	for (compno = 0, tcomp = tile->tcomps, cmpt = dec->cmpts; compno <
 	  dec->numcomps; ++compno, ++tcomp, ++cmpt) {
-		int x, y, xx, yy, iw, ih;
+		int x, y;
 		x = tcomp->xstart - JPC_CEILDIV(dec->xstart, cmpt->hstep);
 		y = tcomp->ystart - JPC_CEILDIV(dec->ystart, cmpt->vstep);
 
+#ifdef GEOJASPER_XCSOAR
 		switch (dec->xcsoar) {
 		case 2:
+			int xx, yy, iw, ih;
 			dptr = jas_rtc_GetOverview();
 			iw = dec->cmpts->width/16;
 			ih = dec->cmpts->height/16;
@@ -1285,16 +1312,19 @@ static int jpc_dec_tiledecode(jpc_dec_t *dec, jpc_dec_tile_t *tile)
 			break;
 		default:
 		case 0:
+#endif
 			if (jas_image_writecmpt(dec->image, compno,
 			  x, y,
 			  jas_matrix_numcols(tcomp->data),
 			  jas_matrix_numrows(tcomp->data),
 			  tcomp->data)) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 				fprintf(stderr, "write component failed\n");
 #endif
 				return -4;
+#ifdef GEOJASPER_XCSOAR
 			}
+#endif
 		}
 	}
 
@@ -1451,7 +1481,7 @@ static int jpc_dec_process_coc(jpc_dec_t *dec, jpc_ms_t *ms)
 	jpc_dec_tile_t *tile;
 
 	if (JAS_CAST(int, coc->compno) > dec->numcomps) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 		fprintf(stderr,
 		  "invalid component number in COC marker segment\n");
 #endif
@@ -1480,7 +1510,7 @@ static int jpc_dec_process_rgn(jpc_dec_t *dec, jpc_ms_t *ms)
 	jpc_dec_tile_t *tile;
 
 	if (JAS_CAST(int, rgn->compno) > dec->numcomps) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 		fprintf(stderr,
 		  "invalid component number in RGN marker segment\n");
 #endif
@@ -1532,7 +1562,7 @@ static int jpc_dec_process_qcc(jpc_dec_t *dec, jpc_ms_t *ms)
 	jpc_dec_tile_t *tile;
 
 	if (JAS_CAST(int, qcc->compno) > dec->numcomps) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 		fprintf(stderr,
 		  "invalid component number in QCC marker segment\n");
 #endif
@@ -1632,6 +1662,11 @@ static int jpc_dec_process_ppt(jpc_dec_t *dec, jpc_ms_t *ms)
 
 static int jpc_dec_process_com(jpc_dec_t *dec, jpc_ms_t *ms)
 {
+#ifndef GEOJASPER_XCSOAR
+	/* Eliminate compiler warnings about unused variables. */
+	dec = 0;
+	ms = 0;
+#else
 	float lon_min, lon_max, lat_min, lat_max;
 	char* cptr;
 
@@ -1653,6 +1688,7 @@ static int jpc_dec_process_com(jpc_dec_t *dec, jpc_ms_t *ms)
 		// Error! XCSoar header text not found
 		return -1;
 	}
+#endif
 
 	return 0;
 }
@@ -1663,7 +1699,7 @@ static int jpc_dec_process_unk(jpc_dec_t *dec, jpc_ms_t *ms)
 	dec = 0;
 	(void)ms;
 
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 	fprintf(stderr, "warning: ignoring unknown marker segment\n");
 	jpc_ms_dump(ms, stderr);
 #endif
@@ -2028,7 +2064,7 @@ static void jpc_undo_roi(jas_matrix_t *x, int roishift, int bgshift, int numbps)
 				  Here we ensure that any such bits are masked off. */
 				if (mag & (~mask)) {
 					if (!warn) {
-#if 0 // JMW
+#ifndef GEOJASPER_XCSOAR
 						fprintf(stderr,
 						  "warning: possibly corrupt code stream\n");
 #endif
@@ -2071,7 +2107,7 @@ static jpc_dec_t *jpc_dec_create(jpc_dec_importopts_t *impopts, jas_stream_t *in
 	dec->maxlyrs = impopts->maxlyrs;
 	dec->maxpkts = impopts->maxpkts;
 	dec->xcsoar = impopts->xcsoar;
-dec->numpkts = 0;
+	dec->numpkts = 0;
 	dec->ppmseqno = 0;
 	dec->state = 0;
 	dec->cmpts = 0;
@@ -2183,6 +2219,66 @@ void jpc_seg_destroy(jpc_dec_seg_t *seg)
 	}
 	jas_free(seg);
 }
+
+#ifndef GEOJASPER_XCSOAR
+static int jpc_dec_dump(jpc_dec_t *dec, FILE *out)
+{
+	jpc_dec_tile_t *tile;
+	int tileno;
+	jpc_dec_tcomp_t *tcomp;
+	int compno;
+	jpc_dec_rlvl_t *rlvl;
+	int rlvlno;
+	jpc_dec_band_t *band;
+	int bandno;
+	jpc_dec_prc_t *prc;
+	int prcno;
+	jpc_dec_cblk_t *cblk;
+	int cblkno;
+
+	for (tileno = 0, tile = dec->tiles; tileno < dec->numtiles;
+	  ++tileno, ++tile) {
+		for (compno = 0, tcomp = tile->tcomps; compno < dec->numcomps;
+		  ++compno, ++tcomp) {
+			for (rlvlno = 0, rlvl = tcomp->rlvls; rlvlno <
+			  tcomp->numrlvls; ++rlvlno, ++rlvl) {
+fprintf(out, "RESOLUTION LEVEL %d\n", rlvlno);
+fprintf(out, "xs =%d, ys = %d, xe = %d, ye = %d, w = %d, h = %d\n",
+  rlvl->xstart, rlvl->ystart, rlvl->xend, rlvl->yend, rlvl->xend -
+  rlvl->xstart, rlvl->yend - rlvl->ystart);
+				for (bandno = 0, band = rlvl->bands;
+				  bandno < rlvl->numbands; ++bandno, ++band) {
+fprintf(out, "BAND %d\n", bandno);
+fprintf(out, "xs =%d, ys = %d, xe = %d, ye = %d, w = %d, h = %d\n",
+  jas_seq2d_xstart(band->data), jas_seq2d_ystart(band->data), jas_seq2d_xend(band->data),
+  jas_seq2d_yend(band->data), jas_seq2d_xend(band->data) - jas_seq2d_xstart(band->data),
+  jas_seq2d_yend(band->data) - jas_seq2d_ystart(band->data));
+					for (prcno = 0, prc = band->prcs;
+					  prcno < rlvl->numprcs; ++prcno,
+					  ++prc) {
+fprintf(out, "CODE BLOCK GROUP %d\n", prcno);
+fprintf(out, "xs =%d, ys = %d, xe = %d, ye = %d, w = %d, h = %d\n",
+  prc->xstart, prc->ystart, prc->xend, prc->yend, prc->xend -
+  prc->xstart, prc->yend - prc->ystart);
+						for (cblkno = 0, cblk =
+						  prc->cblks; cblkno <
+						  prc->numcblks; ++cblkno,
+						  ++cblk) {
+fprintf(out, "CODE BLOCK %d\n", cblkno);
+fprintf(out, "xs =%d, ys = %d, xe = %d, ye = %d, w = %d, h = %d\n",
+  jas_seq2d_xstart(cblk->data), jas_seq2d_ystart(cblk->data), jas_seq2d_xend(cblk->data),
+  jas_seq2d_yend(cblk->data), jas_seq2d_xend(cblk->data) - jas_seq2d_xstart(cblk->data),
+  jas_seq2d_yend(cblk->data) - jas_seq2d_ystart(cblk->data));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+#endif
 
 jpc_streamlist_t *jpc_streamlist_create()
 {
