@@ -27,10 +27,9 @@ Copyright_License {
  * it: symlink ~/.wine/dosdevices/com1 to /tmp/nmea, and configure
  * "COM1" in XCSoar.
  */
-
+#include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>

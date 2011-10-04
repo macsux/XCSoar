@@ -326,20 +326,44 @@ TestFlytec()
   nmea_info.Reset();
   nmea_info.clock = fixed_one;
 
-  ok1(device->ParseNMEA("$FLYSEN,,,,,,,,,V,,101450,02341,0334,02000,,,,,,,,,*5e",
-                        nmea_info));
+  //ok1(device->ParseNMEA("$FLYSEN,,,,,,,,,V,,101450,02341,0334,02000,,,,,,,,,*5e", nmea_info));
+  ok1(device->ParseNMEA("$FLYSEN,230911,095800,4030.600,N,07937.800,W,10,01111,00300,A,05,101325,00350,0050,02222,P,020,000,999,999,01234,00000,099,99999,999,ABCDE"
+      , nmea_info));
+
+  ok1(nmea_info.track_available);
+  fixed deg = nmea_info.track.value_degrees();
+  deg = deg + fixed(0);
+  ok1(equals(nmea_info.track.value_degrees(), 10));
+  ok1(nmea_info.location_available);
+
+
+  ok1(equals(nmea_info.location.Latitude, 40.51 ));
+  ok1(equals(nmea_info.location.Longitude, -79.63 ));
+  fixed gs = nmea_info.ground_speed;
+  gs = gs + fixed(0);
+  ok1(nmea_info.ground_speed_available);
+  ok1(equals(nmea_info.ground_speed, 11.11 ));
+  fixed ga = nmea_info.gps_altitude;
+  ga = ga + fixed(0);
+  ok1(nmea_info.gps_altitude_available);
+  ok1(equals(nmea_info.gps_altitude, 300 ));
+
   ok1(nmea_info.static_pressure_available);
-  ok1(equals(nmea_info.static_pressure, 101450));
-  ok1(nmea_info.pressure_altitude_available);
-  ok1(equals(nmea_info.pressure_altitude, 2341));
+  ok1(equals(nmea_info.static_pressure, 1013.25 ));
+  ok1(nmea_info.baro_altitude_available);
+  ok1(equals(nmea_info.baro_altitude, 350 ));
   ok1(nmea_info.total_energy_vario_available);
-  ok1(equals(nmea_info.total_energy_vario, 3.34));
+  ok1(equals(nmea_info.total_energy_vario, 0.5));
   ok1(nmea_info.airspeed_available);
-  ok1(equals(nmea_info.true_airspeed, 20.0));
+  ok1(equals(nmea_info.true_airspeed, 22.22));
+  ok1(nmea_info.temperature_available);
+  ok1(equals(nmea_info.temperature, 20));
+  ok1(nmea_info.settings.mac_cready_available);
+  ok1(equals(nmea_info.settings.mac_cready, 12.34));
 
   nmea_info.Reset();
   nmea_info.clock = fixed_one;
-
+/*
   ok1(device->ParseNMEA("$FLYSEN,,,,,,,,,,V,,101450,02341,0334,02000,,,,,,,,,*5e",
                         nmea_info));
   ok1(nmea_info.static_pressure_available);
@@ -352,7 +376,7 @@ TestFlytec()
   ok1(equals(nmea_info.true_airspeed, 20.0));
 
   ok1(!device->ParseNMEA("$FLYSEN,,,,,,,,,,,,,,,,,,,,*5e", nmea_info));
-
+*/
   delete device;
 }
 

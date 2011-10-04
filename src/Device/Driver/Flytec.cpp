@@ -27,7 +27,7 @@ Copyright_License {
 #include "NMEA/Info.hpp"
 #include "NMEA/InputLine.hpp"
 #include "Units/Units.hpp"
-
+#include <string.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -107,65 +107,195 @@ FlytecParseVMVABD(NMEAInputLine &line, NMEAInfo &info)
  * Parse a "$FLYSEN" sentence.
  *
  * @see http://www.flytec.ch/public/Special%20NMEA%20sentence.pdf
+$FLYSEN                                   8 Digits
+Date(ddmmyy)                              6 Digits
+Time(hhmmss)                              6 Digits
+Latitude(ddmm.mmm)                        8 Digits incl. decimal
+N (or S)                                  1 Digit
+Longitude(dddmm.mmm)                      9 Digits inc. decimal
+E (or W)                                  1 Digit
+Track (xxx Deg)                           3 Digits (000 to 359)
+Speed over Ground (xxxxx cm/s)            5 Digits
+GPS altitude (xxxxx meter)                5 Digits
+Validity of 3 D fix A or V                1 Digit In case of V (void=not valid) GPS data should not be used. GPS altitude position and speed should be ignored.
+Satellites in Use (0 to 12)               2 Digits
+Raw pressure (xxxxxx Pa)                  6 Digits
+Baro Altitude (xxxxx meter)               5 Digits (-xxxx to xxxxx)(Based on 1013.25hPa)
+Variometer (xxxx cm/s)                    4 or 5 Digits (-9999 to 9999)
+true airspeed (xxxxx cm/s)                5 Digits (0 to 99999cm/s = 3600km/h)
+Airspeed source P or V                    1 Digit P= pitot			 V = Vane wheel
+Temp. PCB (xxx °C)                        3 Digits (-99 to 999)
+Temp. Balloon Envelope (xxx °C)           3 Digits (-99 to 999)
+Battery Capacity Bank 1 (0 to 100%)       3 Digits 999 if data is not available (no battery or other reason)
+Battery Capacity Bank 2 (0 to 100%)       3 Digits 999 if data is not available (no battery or other reason)
+Speed to fly1 (MC0 xxxxx cm/s)            5 Digits
+Speed to fly2 (McC. xxxxx cm/s)			      5 Digits
+Keypress Code (Experimental empty to 99)  3 Digits (Code see below)
+Dist. to WP (xxxxxx m)				 	          6 Digits (Max 200000m) 999999 if not available (GPS position not available or other reason)
+Bearing (xxx Deg)				 	                3 Digits (999 if not available
+*Checksum<CR><LF> 5 Digits
+Total 115 Digits
  */
 static bool
 FlytecParseFLYSEN(NMEAInputLine &line, NMEAInfo &info)
 {
   fixed value;
 
+
+  //Date(ddmmyy), 6 Digits
+  line.skip();
+
   //  Time(hhmmss),   6 Digits
   line.skip();
 
   //  Latitude(ddmm.mmm),   8 Digits incl. decimal
-  //  N (or S),   1 Digit
-  line.skip(2);
+  char position[10];
+  char direction = '\0';
+  char degreesArr[10];
+  char minsArr[10];
 
-  //  Longitude(dddmm.mmm),   9 Digits inc. decimal
-  //  E (or W),   1 Digit
-  line.skip(2);
+  for (int i=0;i<10;i++)
+    position[i] = '\0';
+  for (int i=0;i<10;i++)
+    degreesArr[i] = '\0';
+  for (int i=0;i<10;i++)
+    minsArr[i] = '\0';
 
-  //  Track (xxx Deg),   3 Digits
-  //  Speed over Ground (xxxxx cm/s)        5 Digits
-  //  GPS altitude (xxxxx meter),           5 Digits
-  line.skip(3);
+  Angle lat;
+  Angle lon;
+  double degreesLat = 0.0;
+  double minsLat = 0.0;
+  line.read(position,8);
+  for(int i=0;i<2;i++)
+	  degreesArr[i] = position[i];
+  for(int i=0;i<5;i++)
+  	  minsArr[i] = position[i+2];
+  degreesLat = fabs(atof(degreesArr));
+  minsLat = fabs(atof(minsArr));
 
-  //  Validity of 3 D fix A or V,           1 Digit
-  char validity = line.read_first_char();
-  if (validity != 'A' && validity != 'V') {
-    validity = line.read_first_char();
-    if (validity != 'A' && validity != 'V')
-      return false;
+
+  //N (or S), 1 Digit
+
+  direction = line.read_first_char();
+  if(direction == 'S')
+    lat = Angle::dms(-fixed(degreesLat),-fixed(minsLat),fixed(0));
+  else
+    lat = Angle::dms(fixed(degreesLat),fixed(minsLat),fixed(0));
+
+
+  //Longitude(dddmm.mmm), 9 Digits inc. decimal
+  for (int i=0;i<10;i++)
+    position[i] = '\0';
+  for (int i=0;i<10;i++)
+    degreesArr[i] = '\0';
+  for (int i=0;i<10;i++)
+    minsArr[i] = '\0';
+  double degreesLon = 0.0;
+  double minsLon = 0.0;
+  line.read(position,9);
+	for(int i=0;i<3;i++)
+	  degreesArr[i] = position[i];
+	for(int i=0;i<6;i++)
+		  minsArr[i] = position[i+3];
+	degreesLon = fabs(atof(degreesArr));
+	minsLon = fabs(atof(minsArr));
+
+	//E (or W), 1 Digit
+	direction = line.read_first_char();
+  if(direction == 'W')
+    lon = Angle::dms(-fixed(degreesLon),-fixed(minsLon),fixed(0));
+  else
+    lon = Angle::dms(fixed(degreesLon),fixed(minsLon),fixed(0));
+
+  //Track (xxx Deg)              3 Digits (000 to 359)
+  if(line.read_checked(value))
+  {
+    info.track = Angle::degrees(fixed(value));
+    info.track_available.Update(info.clock);
   }
 
-  //  Satellites in Use (0 to 12),          2 Digits
-  line.skip();
+  //Speed over Ground (xxxxx cm/s)       5 Digits
+  double groundSpeed = 0;
+    groundSpeed = line.read(groundSpeed) / 100;
 
-  //  Raw pressure (xxxxxx Pa),  6 Digits
-  if (line.read_checked(value))
-    info.ProvideStaticPressure(value);
 
-  //  Baro Altitude (xxxxx meter),          5 Digits (-xxxx to xxxxx) (Based on 1013.25hPa)
-  if (line.read_checked(value))
-    info.ProvidePressureAltitude(value);
 
-  //  Variometer (xxxx cm/s),   4 or 5 Digits (-9999 to 9999)
-  if (line.read_checked(value))
+  //GPS altitude (xxxxx meter)         5 Digits
+  double gpsAltitude = 0;
+    gpsAltitude = line.read(gpsAltitude);
+
+
+  // Validity of 3 D fix A or V         1 Digit In case of V (void=not valid) GPS data should not be used. GPS altitude position and speed should be ignored.
+  char validity = line.read_first_char();
+  if(validity != 'V')
+  {
+    // gps data is good - update the info
+    info.location.Latitude = lat;
+    info.location.Longitude = lon;
+    info.location_available.Update(info.clock);
+    info.ground_speed = groundSpeed;
+    info.ground_speed_available.Update(info.clock);
+    info.gps_altitude = gpsAltitude;
+    info.gps_altitude_available.Update(info.clock);
+
+  }
+
+  //Satellites in Use (0 to 12)        2 Digits
+  line.read(info.gps.satellites_used);
+
+  //Raw pressure (xxxxxx Pa)         6 Digits
+  if(line.read_checked(value))
+    info.ProvideStaticPressure(value / 100);
+
+  //Baro Altitude (xxxxx meter)        5 Digits (-xxxx to xxxxx)(Based on 1013.25hPa)
+  if(line.read_checked(value))
+    info.ProvideBaroAltitudeTrue(value);
+
+
+  //Variometer (xxxx cm/s)                    4 or 5 Digits (-9999 to 9999)
+  if(line.read_checked(value))
     info.ProvideTotalEnergyVario(value / 100);
 
-  //  true airspeed (xxxxx cm/s),           5 Digits (0 to 99999cm/s = 3600km/h)
-  if (line.read_checked(value))
+  //true airspeed (xxxxx cm/s)                5 Digits (0 to 99999cm/s = 3600km/h)
+  if(line.read_checked(value))
     info.ProvideTrueAirspeed(value / 100);
 
-  //  Airspeed source P or V,   1 Digit P= pitot, V = Vane wheel
-  //  Temp. PCB (xxx ï¿½C),   3 Digits
-  //  Temp. Balloon Envelope (xxx ï¿½C),      3 Digits
-  //  Battery Capacity Bank 1 (0 to 100%)   3 Digits
-  //  Battery Capacity Bank 2 (0 to 100%)   3 Digits
-  //  Dist. to WP (xxxxxx m),   6 Digits (Max 200000m)
-  //  Bearing (xxx Deg),   3 Digits
-  //  Speed to fly1 (MC0 xxxxx cm/s),       5 Digits
-  //  Speed to fly2 (McC. xxxxx cm/s)       5 Digits
-  //  Keypress Code (Experimental empty to 99)     2 Digits
+  //Airspeed source P or V                    1 Digit P= pitot       V = Vane wheel
+  line.skip();
+
+  //Temp. PCB (xxx °C)                        3 Digits (-99 to 999)
+  if(line.read_checked(value))
+  {
+    info.temperature = value;
+    info.temperature_available = true;
+  }
+
+  //Temp. Balloon Envelope (xxx °C)           3 Digits (-99 to 999)
+  line.skip();
+
+  //Battery Capacity Bank 1 (0 to 100%)       3 Digits 999 if data is not available (no battery or other reason)
+  line.skip();
+
+  //Battery Capacity Bank 2 (0 to 100%)       3 Digits 999 if data is not available (no battery or other reason)
+  line.skip();
+
+
+  //Speed to fly1 (MC0 xxxxx cm/s)            5 Digits
+  if(line.read_checked(value))
+    info.settings.ProvideMacCready(value / 100, info.clock);
+
+  //Speed to fly2 (McC. xxxxx cm/s)           5 Digits
+  line.skip();
+
+  //Keypress Code (Experimental empty to 99)  3 Digits (Code see below)
+  line.skip();
+
+  //Dist. to WP (xxxxxx m)                    6 Digits (Max 200000m) 999999 if not available (GPS position not available or other reason)
+  line.skip();
+
+  //Bearing (xxx Deg)                         3 Digits (999 if not available
+  line.skip();
+
 
   return true;
 }
@@ -192,6 +322,8 @@ FlytecCreateOnPort(const DeviceConfig &config, Port *com_port)
 {
   return new FlytecDevice(com_port);
 }
+
+
 
 const struct DeviceRegister flytec_device_driver = {
   _T("Flytec"),
